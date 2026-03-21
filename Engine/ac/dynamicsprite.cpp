@@ -71,6 +71,7 @@ void DynamicSprite_Delete(ScriptDynamicSprite *sds)
             ScriptDrawingSurface *surf = static_cast<ScriptDrawingSurface *>(ccGetObjectAddressFromHandle(ref_it->second));
             if (surf)
                 surf->Invalidate();
+            DynamicSpriteDSRef.erase(ref_it);
         }
 
         free_dynamic_sprite(sds->slot);
