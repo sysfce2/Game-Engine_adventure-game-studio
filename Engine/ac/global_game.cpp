@@ -842,6 +842,11 @@ int IsKeyPressed (int keycode) {
     return ags_iskeydown(static_cast<eAGSKeyCode>(keycode));
 }
 
+bool IsAnyKeyPressed()
+{
+    return ags_isanykeydown();
+}
+
 int SaveScreenShot4(const char *namm, int width, int height, int layers)
 {
     String filepath = namm;

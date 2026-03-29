@@ -124,6 +124,7 @@ const char *GetLocationName(int xxx, int yyy);
 void GetLocationNameInBuf(int xxx,int yyy, char *buf);
 
 int IsKeyPressed (int keycode);
+bool IsAnyKeyPressed();
 
 int SaveScreenShot1(const char*namm);
 int SaveScreenShot4(const char *namm, int width, int height, int layers);

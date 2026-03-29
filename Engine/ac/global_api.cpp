@@ -939,10 +939,14 @@ RuntimeScriptValue Sc_IsInterfaceEnabled(const RuntimeScriptValue *params, int32
     API_SCALL_INT(IsInterfaceEnabled);
 }
 
-// int  (int keycode)
 RuntimeScriptValue Sc_IsKeyPressed(const RuntimeScriptValue *params, int32_t param_count)
 {
     API_SCALL_INT_PINT(IsKeyPressed);
+}
+
+RuntimeScriptValue Sc_IsAnyKeyPressed(const RuntimeScriptValue *params, int32_t param_count)
+{
+    API_SCALL_BOOL(IsAnyKeyPressed);
 }
 
 // int ()
@@ -2516,6 +2520,7 @@ void RegisterGlobalAPI(ScriptAPIVersion base_api, ScriptAPIVersion /*compat_api*
         { "IsInventoryInteractionAvailable", API_FN_PAIR(IsInventoryInteractionAvailable) },
         { "IsInterfaceEnabled",       API_FN_PAIR(IsInterfaceEnabled) },
         { "IsKeyPressed",             API_FN_PAIR(IsKeyPressed) },
+        { "IsAnyKeyPressed",          API_FN_PAIR(IsAnyKeyPressed) },
         { "IsMusicPlaying",           API_FN_PAIR(IsMusicPlaying) },
         { "IsMusicVoxAvailable",      API_FN_PAIR(IsMusicVoxAvailable) },
         { "IsObjectAnimating",        API_FN_PAIR(IsObjectAnimating) },

@@ -356,6 +356,11 @@ int IsButtonDown(int which) {
     return ags_misbuttondown(static_cast<eAGSMouseButton>(which)) ? 1 : 0;
 }
 
+bool IsAnyButtonDown()
+{
+    return ags_misanybuttondown();
+}
+
 int IsModeEnabled(int which) {
     return (which < 0) || (which >= game.numcursors) ? 0 :
         which == MODE_USE ? playerchar->activeinv > 0 :
@@ -554,6 +559,11 @@ RuntimeScriptValue Sc_IsButtonDown(const RuntimeScriptValue *params, int32_t par
     API_SCALL_INT_PINT(IsButtonDown);
 }
 
+RuntimeScriptValue Sc_IsAnyButtonDown(const RuntimeScriptValue *params, int32_t param_count)
+{
+    API_SCALL_BOOL(IsAnyButtonDown);
+}
+
 // int (int which)
 RuntimeScriptValue Sc_IsModeEnabled(const RuntimeScriptValue *params, int32_t param_count)
 {
@@ -683,6 +693,7 @@ void RegisterMouseAPI()
         { "Mouse::GetModeGraphic^1",          API_FN_PAIR(Mouse_GetModeGraphic) },
         { "Mouse::GetModeHotspot^1",          API_FN_PAIR(Mouse_GetModeHotspot) },
         { "Mouse::IsButtonDown^1",            API_FN_PAIR(IsButtonDown) },
+        { "Mouse::IsAnyButtonDown^0",         API_FN_PAIR(IsAnyButtonDown) },
         { "Mouse::IsModeEnabled^1",           API_FN_PAIR(IsModeEnabled) },
         { "Mouse::SaveCursorUntilItLeaves^0", API_FN_PAIR(SaveCursorForLocationChange) },
         { "Mouse::SelectNextMode^0",          API_FN_PAIR(SetNextCursor) },

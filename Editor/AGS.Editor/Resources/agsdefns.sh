@@ -1016,6 +1016,8 @@ builtin struct Mouse {
 #ifdef SCRIPT_API_v363
   /// Gets the active hotspot for the specified mouse cursor.
   import static Point* GetModeHotspot(CursorMode);
+  /// Checks whether any mouse button is currently pressed.
+  import static bool IsAnyButtonDown();
 #endif
   /// Gets the current mouse position.
   readonly int  x,y;
@@ -1767,6 +1769,10 @@ import int  FindGUIID(const string);  // $AUTOCOMPLETEIGNORE$
 /// Skip current cutscene (if one is currently in progress)
 import void SkipCutscene();
 #endif // SCRIPT_API_v3507
+#ifdef SCRIPT_API_v363
+/// Checks whether any key is currently held down
+import bool IsAnyKeyPressed();
+#endif // SCRIPT_API_v363
 
 #ifndef STRICT
 // Obsolete GUI functions
