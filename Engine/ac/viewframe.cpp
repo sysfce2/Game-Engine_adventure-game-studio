@@ -124,7 +124,7 @@ int CalcFrameSoundVolume(int obj_vol, int anim_vol, int scale)
 }
 
 // Handle the new animation frame (play linked sounds, etc)
-void CheckViewFrame(int view, int loop, int frame, int sound_volume)
+void CheckViewFrame(int view, int loop, int frame, int sound_volume, int sound_pan, int sound_speed)
 {
     ScriptAudioChannel *channel = nullptr;
     // Play a sound, if one is linked to this frame
@@ -151,12 +151,16 @@ void CheckViewFrame(int view, int loop, int frame, int sound_volume)
             channel = play_audio_clip_by_index(views[view].loops[loop].frames[frame].sound);
         }
     }
+    // Apply sound properties
     if (channel)
     {
-        sound_volume = Math::Clamp(sound_volume, 0, 100);
         auto* ch = AudioChans::GetChannel(channel->id);
         if (ch)
-            ch->set_volume100(ch->get_volume100() * sound_volume / 100);
+        {
+            ch->set_volume100(ch->get_volume100() * (Math::Clamp(sound_volume, 0, 100) / 100));
+            ch->set_panning(sound_pan);
+            ch->set_speed(sound_speed);
+        }
     }
     
 }

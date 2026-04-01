@@ -45,7 +45,7 @@ int  ViewFrame_GetFrame(ScriptViewFrame *svf);
 int CalcFrameSoundVolume(int obj_vol, int anim_vol, int scale = 100);
 // Handle the new animation frame (play linked sounds, etc);
 // sound_volume is an optional *relative* factor, 100 is default (unchanged)
-void CheckViewFrame(int view, int loop, int frame, int sound_volume = 100);
+void CheckViewFrame(int view, int loop, int frame, int sound_volume = 100, int sound_pan = 0, int sound_speed = 1000);
 // draws a view frame, flipped if appropriate
 void DrawViewFrame(Common::Bitmap *ds, const ViewFrame *vframe, int x, int y, bool alpha_blend = false);
 

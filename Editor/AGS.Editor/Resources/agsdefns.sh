@@ -2904,8 +2904,10 @@ builtin managed struct Object {
   import attribute int  Scaling;
 #endif // SCRIPT_API_v360
 #ifdef SCRIPT_API_v361
+#ifdef SCRIPT_COMPAT_v363
   /// Gets/sets the volume modifier (0-100) of frame-linked sounds for this object.
   import attribute int  AnimationVolume;
+#endif // SCRIPT_COMPAT_v363
   /// Gets the script name of this object.
   import readonly attribute String ScriptName;
 #endif // SCRIPT_API_v361
@@ -2916,6 +2918,12 @@ builtin managed struct Object {
   readonly import attribute int DestinationY;
 #endif
 #ifdef SCRIPT_API_v363
+  /// Gets/sets the panning (-100 - +100) of frame-linked sounds for this object.
+  import attribute int  AudioPanning;
+  /// Gets/sets the speed of frame-linked sounds for this object.
+  import attribute int  AudioSpeed;
+  /// Gets/sets the volume modifier (0-100) of frame-linked sounds for this object.
+  import attribute int  AudioVolume;
   /// Gets/sets the relative x offset of a blocking area of the object.
   import attribute int  BlockingRectX;
   /// Gets/sets the relative y offset of a blocking area of the object.
@@ -3177,8 +3185,10 @@ builtin managed struct Character {
   import static Character* GetAtRoomXY(int x, int y);      // $AUTOCOMPLETESTATICONLY$
 #endif // SCRIPT_API_v3507
 #ifdef SCRIPT_API_v360
+#ifdef SCRIPT_COMPAT_v363
   /// Gets/sets the volume modifier (0-100) of frame-linked sounds for this character.
   import attribute int  AnimationVolume;
+#endif // SCRIPT_COMPAT_v363
   /// Gets/sets the character's idle animation delay.
   import attribute int  IdleAnimationDelay;
 #endif // SCRIPT_API_v360
@@ -3195,6 +3205,12 @@ builtin managed struct Character {
   readonly import attribute Character* Following;
 #endif // SCRIPT_API_v362
 #ifdef SCRIPT_API_v363
+  /// Gets/sets the panning (-100 - +100) of frame-linked sounds for this character.
+  import attribute int  AudioPanning;
+  /// Gets/sets the speed of frame-linked sounds for this character.
+  import attribute int  AudioSpeed;
+  /// Gets/sets the volume modifier (0-100) of frame-linked sounds for this character.
+  import attribute int  AudioVolume;
   /// Gets/sets the relative x offset of a blocking area of the character.
   import attribute int  BlockingRectX;
   /// Gets/sets the relative y offset of a blocking area of the character.

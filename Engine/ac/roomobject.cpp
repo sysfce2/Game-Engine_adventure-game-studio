@@ -98,12 +98,12 @@ void RoomObject::UpdateCyclingView(int ref_id)
 int RoomObject::GetFrameSoundVolume() const
 {
     // NOTE: room objects don't have "scale volume" flag at the moment
-    return ::CalcFrameSoundVolume(anim_volume, cur_anim_volume);
+    return ::CalcFrameSoundVolume(audio_volume, cur_audio_volume);
 }
 
 void RoomObject::CheckViewFrame()
 {
-    ::CheckViewFrame(view, loop, frame, GetFrameSoundVolume());
+    ::CheckViewFrame(view, loop, frame, GetFrameSoundVolume(), audio_panning, audio_speed);
 }
 
 void RoomObject::ReadFromSavegame(Stream *in, int save_ver)
@@ -143,15 +143,16 @@ void RoomObject::ReadFromSavegame(Stream *in, int save_ver)
 
     if (save_ver >= kRoomStatSvgVersion_36025)
     { // anim vols order inverted compared to character, by mistake :(
-        cur_anim_volume = static_cast<uint8_t>(in->ReadInt8());
-        anim_volume = static_cast<uint8_t>(in->ReadInt8());
-        in->ReadInt8(); // reserved to fill int32
-        in->ReadInt8();
+        cur_audio_volume = static_cast<uint8_t>(in->ReadInt8());
+        audio_volume = static_cast<uint8_t>(in->ReadInt8());
+        audio_panning = in->ReadInt8();
+        in->ReadInt8(); // reserved
     }
     else
     {
-        cur_anim_volume = 100;
-        anim_volume = 100;
+        cur_audio_volume = 100;
+        audio_volume = 100;
+        audio_panning = 0;
     }
 
     if (save_ver >= kRoomStatSvgVersion_36304)
@@ -163,6 +164,14 @@ void RoomObject::ReadFromSavegame(Stream *in, int save_ver)
     {
         blocking_x = 0;
         blocking_y = 0;
+    }
+
+    if (save_ver >= kRoomStatSvgVersion_36310)
+    {
+        audio_speed = in->ReadInt32();
+        in->ReadInt32(); // reserved
+        in->ReadInt32();
+        in->ReadInt32();
     }
 }
 
@@ -195,11 +204,16 @@ void RoomObject::WriteToSavegame(Stream *out) const
     // kRoomStatSvgVersion_36016
     StrUtil::WriteString(name, out);
     // kRoomStatSvgVersion_36025
-    out->WriteInt8(static_cast<uint8_t>(cur_anim_volume));
-    out->WriteInt8(static_cast<uint8_t>(anim_volume));
-    out->WriteInt8(0); // reserved to fill int32
-    out->WriteInt8(0);
+    out->WriteInt8(static_cast<uint8_t>(cur_audio_volume));
+    out->WriteInt8(static_cast<uint8_t>(audio_volume));
+    out->WriteInt8(audio_panning);
+    out->WriteInt8(0); // reserved
     // kRoomStatSvgVersion_36304
     out->WriteInt16(blocking_x);
     out->WriteInt16(blocking_y);
+    // kRoomStatSvgVersion_36310
+    out->WriteInt32(audio_speed);
+    out->WriteInt32(0); // reserved
+    out->WriteInt32(0);
+    out->WriteInt32(0);
 }

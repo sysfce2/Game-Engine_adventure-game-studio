@@ -99,6 +99,8 @@ enum CharacterSvgVersion
     kCharSvgVersion_36115   = 4, // no limit on character name's length
     kCharSvgVersion_36205   = 3060205, // 32-bit "following" parameters
     kCharSvgVersion_36304   = 3060304, // blocking x,y
+    kCharSvgVersion_36310   = 3060310, // audio panning and speed
+    kCharSvgVersion_Current = kCharSvgVersion_36310
 };
 
 

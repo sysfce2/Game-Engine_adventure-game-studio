@@ -63,8 +63,10 @@ struct RoomObject
     int8_t  flags;
     // -- up from here is a part of the plugin API
     int16_t blocking_width = 0, blocking_height = 0, blocking_x = 0, blocking_y = 0;
-    int   anim_volume = 100; // default animation volume (relative factor)
-    int   cur_anim_volume = 100; // current animation sound volume (relative factor)
+    int   audio_volume = 100; // default animation volume (relative factor)
+    int   cur_audio_volume = 100; // current animation sound volume (relative factor)
+    int   audio_panning = 0;
+    int   audio_speed = 0;
     Common::String name;
 
     RoomObject();

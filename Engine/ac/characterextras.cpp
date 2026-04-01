@@ -26,13 +26,13 @@ int CharacterExtras::GetEffectiveY(CharacterInfo *chi) const
 int CharacterExtras::GetFrameSoundVolume(CharacterInfo *chi) const
 {
     return ::CalcFrameSoundVolume(
-        anim_volume, cur_anim_volume,
+        audio_volume, cur_audio_volume,
         (chi->flags & CHF_SCALEVOLUME) ? zoom : 100);
 }
 
 void CharacterExtras::CheckViewFrame(CharacterInfo *chi)
 {
-    ::CheckViewFrame(chi->view, chi->loop, chi->frame, GetFrameSoundVolume(chi));
+    ::CheckViewFrame(chi->view, chi->loop, chi->frame, GetFrameSoundVolume(chi), audio_panning, audio_speed);
 }
 
 void CharacterExtras::SetFollowing(CharacterInfo *chi, int follow_who, int distance, int eagerness, bool sort_behind)
@@ -73,15 +73,16 @@ void CharacterExtras::ReadFromSavegame(Stream *in, CharacterSvgVersion save_ver)
     animwait = in->ReadInt16();
     if (save_ver >= kCharSvgVersion_36025)
     {
-        anim_volume = static_cast<uint8_t>(in->ReadInt8());
-        cur_anim_volume = static_cast<uint8_t>(in->ReadInt8());
-        in->ReadInt8(); // reserved to fill int32
-        in->ReadInt8();
+        audio_volume = static_cast<uint8_t>(in->ReadInt8());
+        cur_audio_volume = static_cast<uint8_t>(in->ReadInt8());
+        audio_panning = in->ReadInt8();
+        in->ReadInt8(); // reserved
     }
     else
     {
-        anim_volume = 100;
-        cur_anim_volume = 100;
+        audio_volume = 100;
+        cur_audio_volume = 100;
+        audio_panning = 0;
     }
 
     if (save_ver >= kCharSvgVersion_36205)
@@ -95,6 +96,14 @@ void CharacterExtras::ReadFromSavegame(Stream *in, CharacterSvgVersion save_ver)
         following = -1;
         follow_dist = 0;
         follow_eagerness = 0;
+    }
+
+    if (save_ver >= kCharSvgVersion_36310)
+    {
+        audio_speed = in->ReadInt32();
+        in->ReadInt32(); // reserved
+        in->ReadInt32();
+        in->ReadInt32();
     }
 }
 
@@ -116,12 +125,17 @@ void CharacterExtras::WriteToSavegame(Stream *out) const
     out->WriteInt8(slow_move_counter);
     out->WriteInt16(animwait);
     // kCharSvgVersion_36025
-    out->WriteInt8(static_cast<uint8_t>(anim_volume));
-    out->WriteInt8(static_cast<uint8_t>(cur_anim_volume));
-    out->WriteInt8(0); // reserved to fill int32
-    out->WriteInt8(0);
+    out->WriteInt8(static_cast<uint8_t>(audio_volume));
+    out->WriteInt8(static_cast<uint8_t>(cur_audio_volume));
+    out->WriteInt8(audio_panning);
+    out->WriteInt8(0); // reserved
     // kCharSvgVersion_36205
     out->WriteInt32(following);
     out->WriteInt32(follow_dist);
     out->WriteInt32(follow_eagerness);
+    // kCharSvgVersion_36310
+    out->WriteInt32(audio_speed);
+    out->WriteInt32(0);
+    out->WriteInt32(0);
+    out->WriteInt32(0);
 }
