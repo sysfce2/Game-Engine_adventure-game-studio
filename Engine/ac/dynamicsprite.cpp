@@ -469,11 +469,8 @@ ScriptDynamicSprite* DynamicSprite_CreateFromBackground(int frame, int x1, int y
 
 int add_dynamic_sprite(std::unique_ptr<Bitmap> image, bool has_alpha, uint32_t extra_flags)
 {
-    int slot = spriteset.GetFreeIndex();
-    if (slot <= 0)
-        return 0;
-
-    return add_dynamic_sprite(slot, std::move(image), has_alpha, extra_flags);
+    uint32_t flags = SPF_DYNAMICALLOC | (SPF_ALPHACHANNEL * has_alpha) | extra_flags;
+    return spriteset.AddSprite(std::move(image), flags);
 }
 
 int add_dynamic_sprite(int slot, std::unique_ptr<Bitmap> image, bool has_alpha, uint32_t extra_flags)
