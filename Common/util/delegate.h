@@ -143,6 +143,8 @@ class ObjectDelegate : protected DelegateBase<TObject, TObject*, Args...>
 {
 public:
     typedef DelegateBase<TObject, TObject*, Args...> BaseType;
+    typedef typename BaseType::Handle Handle;
+    typedef typename BaseType::Function Function;
 
     // Subscribe a callback as method of the given object instance;
     // returns registry Handle, which may be used when unsubscribing
@@ -172,7 +174,7 @@ public:
     // Call all registered callbacks, passing the argument list
     void Call(Args ...args)
     {
-        for (auto &c : _callbacks)
+        for (auto &c : BaseType::_callbacks)
             c.second(c.first.second, std::forward<Args>(args)...);
     }
 
