@@ -1130,7 +1130,6 @@ void reset_drawobj_for_overlay(int objnum)
 uint32_t add_sprite_changed_callback(int sprnum, ISpriteUser *user)
 {
     // don't register this callback if sprite does not exist, or if it's not dynamic
-    assert(sprnum >= 0 && static_cast<uint32_t>(sprnum) < game.SpriteInfos.size());
     if (!spriteset.DoesSpriteExist(sprnum) || !game.SpriteInfos[sprnum].IsDynamicSprite())
         return 0u;
 
@@ -1146,7 +1145,6 @@ uint32_t add_sprite_changed_callback(int sprnum, ISpriteUser *user)
 void remove_sprite_changed_callback(int sprnum, ISpriteUser *user)
 {
     // don't register this callback if sprite does not exist, or if it's not dynamic
-    assert(sprnum >= 0 && static_cast<uint32_t>(sprnum) < game.SpriteInfos.size());
     if (!spriteset.DoesSpriteExist(sprnum) || !game.SpriteInfos[sprnum].IsDynamicSprite())
         return;
 

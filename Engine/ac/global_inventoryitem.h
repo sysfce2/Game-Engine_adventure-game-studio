@@ -28,4 +28,6 @@ int  IsInventoryInteractionAvailable (int item, int mood);
 int  GetInvProperty (int item, const char *property);
 void GetInvPropertyText (int item, const char *property, char *bufer);
 
+void InvItems_RegisterDynamicSpriteCallbacks();
+
 #endif // __AGS_EE_AC__GLOBALINVENTORYITEM_H

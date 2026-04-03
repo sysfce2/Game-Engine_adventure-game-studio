@@ -49,6 +49,9 @@ bool ValidateInventoryItem(const char *api_name, int invitem)
     return true;
 }
 
+// TODO: ideally, it's the InvWindow gui controls that should be reacting
+// to the inventory item looks update. For that we'd probably need to subscribe
+// InvWindow for inventory item change, somehow (or character inventory change).
 class InvItemDynamicSpriteListener : public ISpriteUser
 {
 public:
@@ -58,6 +61,15 @@ public:
         AGS::Engine::GUIE::MarkInventoryForUpdate(-1, false);
     }
 } gl_InvItemSpriteListener;
+
+void InvItems_RegisterDynamicSpriteCallbacks()
+{
+    for (int i = 0; i < MAX_INV; ++i)
+    {
+        if (game.invinfo[i].pic > 0)
+            add_sprite_changed_callback(i, &gl_InvItemSpriteListener);
+    }
+}
 
 void set_inv_item_pic(int invi, int piccy)
 {

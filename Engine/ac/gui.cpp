@@ -656,6 +656,9 @@ void prepare_gui_runtime(bool startup)
             if (sld.GetHandleImage() > 0)
                 add_sprite_changed_callback(sld.GetHandleImage(), &sld);
         }
+
+        // This is related to InvWindow gui controls, so call from here
+        InvItems_RegisterDynamicSpriteCallbacks();
     }
 
     GUI::Options.DisabledStyle = static_cast<GuiDisableStyle>(game.options[OPT_DISABLEOFF]);
