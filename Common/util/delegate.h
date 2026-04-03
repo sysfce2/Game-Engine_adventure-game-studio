@@ -49,6 +49,11 @@ public:
     typedef std::function<void(Args...)> Function;
     typedef std::pair<std::pair<Handle, TObject*>, Function> Callback;
 
+    bool HasCallbacks() const
+    {
+        return !_callbacks.empty();
+    }
+
     // Subscribe a callback; returns registry Handle, which is used when unsubscribing
     Handle Add(Function func)
     {
@@ -65,6 +70,10 @@ public:
         assert(user_object);
         if (!user_object)
             return 0u;
+
+        auto it = std::find_if(_callbacks.begin(), _callbacks.end(), CallbackFinder(user_object));
+        if (it != _callbacks.end())
+            return it->first.first; // callback key exists
 
         const Handle handle = ++_handleCounter;
         if (_handleCounter == 0u)
@@ -110,6 +119,11 @@ public:
             c.second(std::forward<Args>(args)...);
     }
 
+    inline operator bool() const
+    {
+        return HasCallbacks();
+    }
+
     // Call all registered callbacks, passing the argument list
     inline void operator()(Args ...args)
     {
@@ -146,6 +160,11 @@ public:
     typedef typename BaseType::Handle Handle;
     typedef typename BaseType::Function Function;
 
+    bool HasCallbacks() const
+    {
+        return BaseType::HasCallbacks();
+    }
+
     // Subscribe a callback as method of the given object instance;
     // returns registry Handle, which may be used when unsubscribing
     Handle Add(TObject *object, Function func)
@@ -176,6 +195,11 @@ public:
     {
         for (auto &c : BaseType::_callbacks)
             c.second(c.first.second, std::forward<Args>(args)...);
+    }
+
+    inline operator bool() const
+    {
+        return BaseType::HasCallbacks();
     }
 
     // Call all registered callbacks, passing the argument list

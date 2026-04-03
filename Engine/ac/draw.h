@@ -61,8 +61,9 @@ void dispose_draw_method();
 void dispose_game_drawdata();
 // Disposes any temporary resources on leaving current room
 void dispose_room_drawdata();
-// Releases all the cached textures of game objects
-void clear_drawobj_cache();
+// Releases all the cached textures of game objects and other cached data.
+// Optionally keeps or resets object subscriptions to sprite changes.
+void clear_drawobj_cache(bool keep_sprite_callbacks);
 // Releases all the textures used as render targets, if necessary;
 // (this is primarily for resetting display mode of certain renderers).
 void release_drawobj_rendertargets();

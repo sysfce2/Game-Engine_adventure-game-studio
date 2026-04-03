@@ -617,6 +617,7 @@ void prepare_gui_runtime(bool startup)
             guio->SetActivated(false);
         }
     }
+
     // Reset particular states after loading game data
     if (startup)
     {
@@ -630,6 +631,32 @@ void prepare_gui_runtime(bool startup)
     play.gui_draw_order.resize(guis.size());
     std::iota(play.gui_draw_order.begin(), play.gui_draw_order.end(), 0);
     update_gui_zorder();
+
+    // Restore subscription to dynamic sprite notifications
+    if (!startup)
+    {
+        for (auto &gui : guis)
+        {
+            if (gui.GetBgImage() > 0)
+                add_sprite_changed_callback(gui.GetBgImage(), &gui);
+        }
+        for (auto& btn : guibuts)
+        {
+            if (btn.GetNormalImage() > 0)
+                add_sprite_changed_callback(btn.GetNormalImage(), &btn);
+            if (btn.GetPushedImage() > 0)
+                add_sprite_changed_callback(btn.GetPushedImage(), &btn);
+            if (btn.GetMouseOverImage() > 0)
+                add_sprite_changed_callback(btn.GetMouseOverImage(), &btn);
+        }
+        for (auto& sld : guislider)
+        {
+            if (sld.GetBgImage() > 0)
+                add_sprite_changed_callback(sld.GetBgImage(), &sld);
+            if (sld.GetHandleImage() > 0)
+                add_sprite_changed_callback(sld.GetHandleImage(), &sld);
+        }
+    }
 
     GUI::Options.DisabledStyle = static_cast<GuiDisableStyle>(game.options[OPT_DISABLEOFF]);
     GUIE::MarkAllGUIForUpdate(true, true);

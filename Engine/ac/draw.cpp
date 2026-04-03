@@ -821,7 +821,7 @@ extern void dispose_engine_overlay();
 
 void dispose_game_drawdata()
 {
-    clear_drawobj_cache();
+    clear_drawobj_cache(false /* reset everything */);
 
     charcache.clear();
     actsps.clear();
@@ -848,7 +848,7 @@ void dispose_room_drawdata()
     dispose_invalid_regions(true);
 }
 
-void clear_drawobj_cache()
+void clear_drawobj_cache(bool keep_sprite_callbacks)
 {
     // clear the character cache
     for (auto &cc : charcache)
@@ -880,7 +880,20 @@ void clear_drawobj_cache()
     cursor_tx = ObjTexture();
 
     // Clear sprite update notification blocks
-    drawstate.SpriteNotifyMap.clear();
+    if (keep_sprite_callbacks)
+    {
+        std::unordered_map<sprkey_t, SpriteNotifyControl> clean_map;
+        for (const auto &n : drawstate.SpriteNotifyMap)
+        {
+            if (n.second.SpriteUpdated)
+                clean_map.insert(n);
+        }
+        drawstate.SpriteNotifyMap = std::move(clean_map);
+    }
+    else
+    {
+        drawstate.SpriteNotifyMap.clear();
+    }
 
     dispose_debug_room_drawdata();
 }
