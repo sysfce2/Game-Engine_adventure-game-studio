@@ -17,6 +17,7 @@
 //=============================================================================
 #include <allegro.h> // get_uformat
 #include "ac/common.h" // quit
+#include "ac/gamestate.h"
 #include "ac/string.h"
 #include "ac/dynobj/cc_dynamicarray.h"
 #include "ac/dynobj/cc_scriptobject.h"
@@ -42,9 +43,9 @@ ScriptDictBase *Dict_CreateImpl(bool sorted, bool case_sensitive)
         if (get_uformat() == U_UTF8)
         {
             if (case_sensitive)
-                dic = new ScriptDictUnicode(LexographicalStrLess());
+                dic = new ScriptDictUnicode(LexographicalStrLess(play.GetTextLocaleName().GetCStr()));
             else
-                dic = new ScriptDictUnicodeCI(LexographicalStrLessNoCase());
+                dic = new ScriptDictUnicodeCI(LexographicalStrLessNoCase(play.GetTextLocaleName().GetCStr()));
         }
         else
         {
@@ -213,9 +214,9 @@ ScriptSetBase *Set_CreateImpl(bool sorted, bool case_sensitive)
         if (get_uformat() == U_UTF8)
         {
             if (case_sensitive)
-                set = new ScriptSetUnicode(LexographicalStrLess());
+                set = new ScriptSetUnicode(LexographicalStrLess(play.GetTextLocaleName().GetCStr()));
             else
-                set = new ScriptSetUnicodeCI(LexographicalStrLessNoCase());
+                set = new ScriptSetUnicodeCI(LexographicalStrLessNoCase(play.GetTextLocaleName().GetCStr()));
         }
         else
         {

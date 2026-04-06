@@ -30,10 +30,10 @@
 #include "game/main_game_file.h" // TODO: constants to separate header or split out reading functions
 
 
-using AGS::Common::UInteraction;
-using AGS::Common::UInteractionEvents;
-using AGS::Common::InteractionVariable;
-using AGS::Common::HGameFileError;
+using Common::UInteraction;
+using Common::UInteractionEvents;
+using Common::InteractionVariable;
+using Common::HGameFileError;
 
 
 // TODO: split GameSetupStruct into struct used to hold loaded game data, and actual runtime object
@@ -56,9 +56,9 @@ struct GameSetupStruct : public GameSetupStructBase
     GameDataVersion   filever = kGameVersion_Undefined;
     Common::String    compiled_with; // version of AGS this data was created by
     char              lipSyncFrameLetters[MAXLIPSYNCFRAMES][50] = {{ 0 }};
-    AGS::Common::PropertySchema propSchema;
-    std::vector<AGS::Common::StringIMap> charProps;
-    AGS::Common::StringIMap invProps[MAX_INV];
+    Common::PropertySchema propSchema;
+    std::vector<Common::StringIMap> charProps;
+    Common::StringIMap invProps[MAX_INV];
     // NOTE: although the view names are stored in game data, they are never
     // used, nor registered as script exports; numeric IDs are used to
     // reference views instead.
@@ -86,7 +86,9 @@ struct GameSetupStruct : public GameSetupStructBase
     int               numCompatGameChannels = 0;
 
     // A dictionary of semi-arbitrary game info properties: title, developer's name, etc
-    AGS::Common::StringMap GameInfo;
+    Common::StringMap GameInfo;
+    // Game text language definition, in the form of locale name ('en', 'en_US' etc)
+    Common::String GameTextLanguage;
     
     // TODO: I converted original array of sprite infos to vector here, because
     // statistically in most games sprites go in long continious sequences with minimal

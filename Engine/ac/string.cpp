@@ -137,11 +137,11 @@ int String_CompareTo(const char *thisString, const char *otherString, bool caseS
     {
         if (caseSensitive)
         {
-            return StrUtil::LexographicalCompare(thisString, otherString);
+            return StrUtil::LexographicalCompare(thisString, otherString, play.GetTextLocaleName().GetCStr());
         }
         else
         {
-            return StrUtil::LexographicalCompareNoCase(thisString, otherString);
+            return StrUtil::LexographicalCompareNoCase(thisString, otherString, play.GetTextLocaleName().GetCStr());
         }
     }
     else
