@@ -16,6 +16,7 @@ namespace AGS.Types
         private const string SPEECH_FONT_TAG = "SpeechFont";
         private const string TEXT_DIRECTION_TAG = "TextDirection";
         private const string ENCODING_TAG = "Encoding";
+        private const string LANGUAGE_TAG = "Language";
         private const string FONT_OVERRIDE_TAG = "Font";
         private const string TAG_DEFAULT = "DEFAULT";
         private const string TAG_DIRECTION_LEFT = "LEFT";
@@ -29,6 +30,7 @@ namespace AGS.Types
         private bool? _rightToLeftText;
         private string _encodingHint;
         private Encoding _encoding;
+        private string _language;
         private Dictionary<int, Font> _fontOverrides = new Dictionary<int, Font>();
         private Dictionary<string, string> _translatedLines;
 
@@ -40,6 +42,7 @@ namespace AGS.Types
             _speechFont = null;
             _rightToLeftText = null;
             EncodingHint = "UTF-8";
+            _language = "en_US";
         }
 
         public string Name
@@ -97,6 +100,12 @@ namespace AGS.Types
         public Encoding Encoding
         {
             get { return _encoding; }
+        }
+
+        public string TextLanguage
+        {
+            get { return _language; }
+            set { _language = value; }
         }
 
         /// <summary>
@@ -166,6 +175,8 @@ namespace AGS.Types
                 sw.WriteLine("//#TextDirection=" + ((_rightToLeftText == true) ? TAG_DIRECTION_RIGHT : ((_rightToLeftText == null) ? TAG_DEFAULT : TAG_DIRECTION_LEFT)));
                 sw.WriteLine("// Text encoding hint - ASCII or UTF-8");
                 sw.WriteLine("//#Encoding=" + (_encodingHint ?? "ASCII"));
+                sw.WriteLine("// Text language, use standard locale strings, like 'en', 'en_US', etc");
+                sw.WriteLine($"//#Language={( _language != null ? _language.Replace('-', '_') : string.Empty )}");
                 if (_fontOverrides.Count != 0)
                 {
                     WriteFontOverrides(sw);
@@ -288,6 +299,10 @@ namespace AGS.Types
             else if (key == ENCODING_TAG)
             {
                 EncodingHint = value;
+            }
+            else if (key == LANGUAGE_TAG)
+            {
+                TextLanguage = value;
             }
             else if (key.StartsWith(FONT_OVERRIDE_TAG))
             {

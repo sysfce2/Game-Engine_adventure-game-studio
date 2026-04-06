@@ -48,6 +48,7 @@ namespace AGS.Types
         private Size _resolution = new Size(320, 200);
         private GameColorDepth _colorDepth = GameColorDepth.TrueColor;
         private string _gameTextEncoding = Encoding.UTF8.WebName;
+        private string _gameTextLanguage = "en-US";
         private int _gameFPS = 60;
         private bool _allowRelativeAssetResolution = false;
         private bool _debugMode = true;
@@ -300,6 +301,17 @@ namespace AGS.Types
         {
             get { return _gameTextEncoding; }
             set { _gameTextEncoding = value; }
+        }
+
+        [DisplayName("Text language")]
+        [Description("Defines base game language. Assign as 'undefined language' if you do not want to specify one.\nThis setting is used whenever engine needs to identify the game text as being of a particular language or using particular alphabet.")]
+        [DefaultValue("en-US")]
+        [Category("(Basic properties)")]
+        [TypeConverter(typeof(TextLanguageTypeConverter))]
+        public string GameTextLanguage
+        {
+            get { return _gameTextLanguage; }
+            set { _gameTextLanguage = value; }
         }
 
         [DisplayName("Game Speed (FPS)")]
