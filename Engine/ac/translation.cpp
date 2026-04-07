@@ -92,7 +92,7 @@ void close_translation ()
         set_uformat(U_UTF8);
     else
         set_uformat(U_ASCII);
-    play.SetTextLocaleName(game.GameTextLanguage);
+    play.SetGameTextLanguage(game.GameTextLanguage);
 }
 
 bool init_translation(const String &lang, const String &fallback_lang)
@@ -201,7 +201,7 @@ bool init_translation(const String &lang, const String &fallback_lang)
         }
     }
 
-    play.SetTextLocaleName(language);
+    play.SetGameTextLanguage(language);
 
     Debug::Printf(kDbgMsg_Info, "Translation initialized: %s (format: %s)", trans_name.GetCStr(), encoding_msg.GetCStr());
     return true;

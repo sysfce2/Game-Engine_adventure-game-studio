@@ -356,9 +356,13 @@ struct GamePlayState
 
     GamePlayState();
 
-    // Game texts locale; used for lexographical string comparison
+    // Current set game text language; this may be set either by the base game,
+    // or by the loaded translation.
+    const Common::String &GetTextLanguage() const { return _gameTextLanguage; }
+    // Current game texts locale; used for lexographical string comparison.
     const Common::String &GetTextLocaleName() const { return _localeNameUTF8; }
-    void SetTextLocaleName(const Common::String &language);
+
+    void SetGameTextLanguage(const Common::String &language);
 
     //
     // Viewport and camera control.
@@ -509,6 +513,7 @@ private:
     VpPoint ScreenToRoomImpl(int scrx, int scry, int view_index, bool clip_viewport, bool convert_cam_to_data);
     void UpdateRoomCamera(int index);
 
+    Common::String _gameTextLanguage;
     // Name of the current used locale for UTF8 text mode
     Common::String _localeNameUTF8;
 

@@ -122,13 +122,20 @@ struct LexographicalStrLess
 {
 public:
     LexographicalStrLess()
-        : _loc(std::locale(""))
+        : _loc(std::locale())
     {
     }
 
     LexographicalStrLess(const char *locale_name)
-        : _loc(std::locale(locale_name))
     {
+        try
+        {
+            _loc = std::locale(locale_name);
+        }
+        catch (const std::runtime_error&)
+        {
+            _loc = std::locale();
+        }
     }
 
     bool operator()(const String &s1, const String &s2) const
@@ -138,7 +145,7 @@ public:
     }
 
 private:
-    const std::locale _loc;
+    std::locale _loc;
 };
 
 // Unicode String less predicate, comparing strings lexographically, and
@@ -149,13 +156,20 @@ private:
 struct LexographicalStrLessNoCase
 {
     LexographicalStrLessNoCase()
-        : _loc(std::locale(""))
+        : _loc(std::locale())
     {
     }
 
     LexographicalStrLessNoCase(const char *locale_name)
-        : _loc(std::locale(locale_name))
     {
+        try
+        {
+            _loc = std::locale(locale_name);
+        }
+        catch (const std::runtime_error&)
+        {
+            _loc = std::locale();
+        }
     }
 
     bool operator()(const String &s1, const String &s2) const
@@ -167,7 +181,7 @@ struct LexographicalStrLessNoCase
     }
 
 private:
-    const std::locale _loc;
+    std::locale _loc;
 };
 
 // Compute case-insensitive hash for a String object

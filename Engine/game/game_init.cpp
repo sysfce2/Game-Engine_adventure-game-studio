@@ -510,7 +510,7 @@ HGameInitError InitGameState(const LoadedGameEntities &ents, GameDataVersion dat
     play.fade_effect = game.options[OPT_FADETYPE];
     play.std_gui_textheight = get_font_height_outlined(0) + 1;
     play.enable_antialiasing = usetup.AntialiasSprites;
-    play.SetTextLocaleName(game.GameTextLanguage);
+    play.SetGameTextLanguage(game.GameTextLanguage);
 
     //
     // 5. Initialize runtime state of certain game objects
