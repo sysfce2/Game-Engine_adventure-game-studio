@@ -77,7 +77,7 @@ ScriptUserObject globalDynamicStruct;
 ScriptUserObject *ScriptStructHelpers::CreatePoint(int x, int y)
 {
     DynObjectRef ref = ScriptUserObject::Create(sizeof(int32_t) * 2);
-    ref.Mgr->WriteInt32(ref.Obj, 0, x);
-    ref.Mgr->WriteInt32(ref.Obj, sizeof(int32_t), y);
-    return static_cast<ScriptUserObject*>(ref.Obj);
+    ref.Mgr()->WriteInt32(ref.Obj(), 0, x);
+    ref.Mgr()->WriteInt32(ref.Obj(), sizeof(int32_t), y);
+    return static_cast<ScriptUserObject*>(ref.Obj());
 }

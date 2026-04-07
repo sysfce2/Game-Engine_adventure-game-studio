@@ -91,6 +91,7 @@ const char* Game_GetGlobalStrings(int index);
 ScriptFileSortStyle ValidateFileSort(const char *apiname, int file_sort);
 ScriptSaveGameSortStyle ValidateSaveGameSort(const char *apiname, int save_sort);
 ScriptSortDirection ValidateSortDirection(const char *apiname, int sort_dir);
+ScriptStringComparison ValidateStringComparison(const char *apiname, int case_sensitive);
 // Save slot range validation; fixups min and max slots, returns if the resulting range is non-empty
 bool ValidateSaveSlotRange(const char *api_name, int &min_slot, int &max_slot);
 

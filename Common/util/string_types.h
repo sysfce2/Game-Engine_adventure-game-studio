@@ -14,14 +14,14 @@
 #ifndef __AGS_CN_UTIL__STRINGTYPES_H
 #define __AGS_CN_UTIL__STRINGTYPES_H
 
+#include <array>
 #include <cctype>
 #include <functional>
 #include <locale>
+#include <memory>
 #include <stdexcept>
-#include <unordered_map>
-
-#include <array>
 #include <vector>
+#include <unordered_map>
 #include "util/string.h"
 
 namespace FNV
@@ -189,6 +189,69 @@ struct LexographicalStrLessNoCase
 
 private:
     std::locale _loc;
+};
+
+// Internal implementation for StrLessAuto predicate
+struct StrLessAutoImpl
+{
+    virtual ~StrLessAutoImpl(){}
+    virtual bool operator()(const String &s1, const String &s2) const = 0;
+};
+
+// The 'less' predicate, which acts according to its configuration
+struct StrLessAuto
+{
+    StrLessAuto(std::unique_ptr<StrLessAutoImpl> &&less_impl)
+        : _lessImpl(std::move(less_impl)) { }
+
+    bool operator()(const String &s1, const String &s2) const
+    {
+        return _lessImpl->operator()(s1, s2);
+    }
+
+private:
+    // It's shared ptr, because STL requires a copy constructor for predicates
+    std::shared_ptr<StrLessAutoImpl> _lessImpl;
+};
+
+struct StrLessAutoDirect : public StrLessAutoImpl
+{
+    bool operator()(const String &s1, const String &s2) const override
+    {
+        return s1 < s2;
+    }
+};
+
+struct StrLessAutoNoCase : public StrLessAutoImpl
+{
+    bool operator()(const String &s1, const String &s2) const override
+    {
+        return s1.CompareNoCase(s2) < 0;
+    }
+};
+
+struct StrLessAutoLexographical : public StrLessAutoImpl, LexographicalStrLess
+{
+    StrLessAutoLexographical() = default;
+    StrLessAutoLexographical(const char *locale_name)
+        : LexographicalStrLess(locale_name) {}
+
+    bool operator()(const String &s1, const String &s2) const override
+    {
+        return LexographicalStrLess::operator()(s1, s2);
+    }
+};
+
+struct StrLessAutoLexographicalNoCase : public StrLessAutoImpl, LexographicalStrLessNoCase
+{
+    StrLessAutoLexographicalNoCase() = default;
+    StrLessAutoLexographicalNoCase(const char *locale_name)
+        : LexographicalStrLessNoCase(locale_name) {}
+
+    bool operator()(const String &s1, const String &s2) const override
+    {
+        return LexographicalStrLessNoCase::operator()(s1, s2);
+    }
 };
 
 // Compute case-insensitive hash for a String object

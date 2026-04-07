@@ -320,8 +320,11 @@ struct GuiOptions
 class SpriteCache;
 
 // Global GUI context, affects controls behavior (drawing, updating)
+// TODO: normally this should be strictly in runtime engine code, not Common lib.
 struct GuiContext
 {
+    // Name of locale to use for the text collation (where applicable)
+    String TextLocaleName;
     // Sprite cache, for GUI drawing in software mode
     SpriteCache *Spriteset = nullptr;
     // Current disabled state.

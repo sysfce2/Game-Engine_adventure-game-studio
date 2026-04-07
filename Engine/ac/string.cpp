@@ -46,7 +46,7 @@ int ValidateFontNumber(const char *apiname, int font_num)
 
 const char *CreateNewScriptString(const char *text)
 {
-    return static_cast<const char*>(ScriptString::Create(text).Obj);
+    return static_cast<const char*>(ScriptString::Create(text).Obj());
 }
 
 

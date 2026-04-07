@@ -58,6 +58,24 @@ int StrUtil::LexographicalCompareNoCase(const String &s1, const String &s2, cons
     }
 }
 
+std::unique_ptr<StrLessAutoImpl> StrUtil::GetStrLessAutoImplFor(bool unicode, bool nocase, const char *locale_name)
+{
+    if (unicode)
+    {
+        if (nocase)
+            return std::unique_ptr<StrLessAutoImpl>(new StrLessAutoLexographicalNoCase(locale_name));
+        else
+            return std::unique_ptr<StrLessAutoImpl>(new StrLessAutoLexographical(locale_name));
+    }
+    else
+    {
+        if (nocase)
+            return std::unique_ptr<StrLessAutoImpl>(new StrLessAutoNoCase());
+        else
+            return std::unique_ptr<StrLessAutoImpl>(new StrLessAutoDirect());
+    }
+}
+
 String StrUtil::IntToString(int d)
 {
     return String::FromFormat("%d", d);

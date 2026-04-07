@@ -37,7 +37,7 @@ const char *CreateNewScriptString(const char *text);
 inline const char *CreateNewScriptString(const AGS::Common::String &text)
     { return CreateNewScriptString(text.GetCStr()); }
 inline const char *CreateNewScriptString(ScriptString::Buffer &&buf)
-    { return static_cast<const char*>(ScriptString::Create(std::move(buf)).Obj); }
+    { return static_cast<const char*>(ScriptString::Create(std::move(buf)).Obj()); }
 
 int String_IsNullOrEmpty(const char *thisString);
 const char* String_Copy(const char *srcString);

@@ -34,7 +34,7 @@ public:
         // TODO: refactor and store "elem size" instead
         uint32_t TotalSize = 0u; // total size in bytes
 
-        inline bool IsManagedType() const { return (ElemCount & ARRAY_MANAGED_TYPE_FLAG) != 0; }
+        inline bool IsPointerArray() const { return (ElemCount & ARRAY_MANAGED_TYPE_FLAG) != 0; }
         inline uint32_t GetElemCount() const { return ElemCount & ~ARRAY_MANAGED_TYPE_FLAG; }
     };
 
@@ -76,6 +76,15 @@ namespace DynamicArrayHelpers
     // Create array of managed strings
     DynObjectRef CreateStringArray(const std::vector<const char*> &);
     DynObjectRef CreateStringArray(const std::vector<AGS::Common::String> &);
+    // Resolves a dynamic array of integers
+    bool ResolveIntArray(const void *arrobj, std::vector<int> &ints);
+    // Resolves a dynamic array of floats
+    bool ResolveFloatArray(const void *arrobj, std::vector<float> &floats);
+    // Resolves a dynamic array of managed pointers (handles) to a list of object addresses
+    bool ResolvePointerArray(const void* arrobj, std::vector<void*> &objects);
+    // Resolves a dynamic array of managed pointers (handles) to a list of DynObjectRef structs,
+    // which define object address, manager and handle
+    bool ResolvePointerArray(const void* arrobj, std::vector<DynObjectRef> &objects);
 };
 
 #endif

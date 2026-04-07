@@ -205,14 +205,14 @@ void FillDirList(std::vector<String> &files, const String &pattern, ScriptFileSo
 
 void *File_GetFiles(const char *filemask, int file_sort, int sort_dir)
 {
-    file_sort = ValidateFileSort("ListBox.FillDirList", file_sort);
-    sort_dir = ValidateSortDirection("ListBox.FillDirList", sort_dir);
+    file_sort = ValidateFileSort("File.GetFiles", file_sort);
+    sort_dir = ValidateSortDirection("File.GetFiles", sort_dir);
 
     std::vector<String> files;
     FillDirList(files, filemask, (ScriptFileSortStyle)file_sort, (ScriptSortDirection)sort_dir);
 
     DynObjectRef arr = DynamicArrayHelpers::CreateStringArray(files);
-    return arr.Obj;
+    return arr.Obj();
 }
 
 void *sc_OpenFile(const char *fnmm, int mode) {

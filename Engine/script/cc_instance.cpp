@@ -1469,7 +1469,7 @@ ccInstError ccInstance::Run(int32_t curpc)
                 return kInstErr_Generic;
             }
             DynObjectRef ref = CCDynamicArray::Create(static_cast<uint32_t>(arg_elnum), arg_elsize, arg_managed);
-            reg1.SetScriptObject(ref.Obj, &globalDynamicArray);
+            reg1.SetScriptObject(ref.Obj(), &globalDynamicArray);
             break;
         }
         case SCMD_NEWUSEROBJECT:
@@ -1482,7 +1482,7 @@ ccInstError ccInstance::Run(int32_t curpc)
                 return kInstErr_Generic;
             }
             DynObjectRef ref = ScriptUserObject::Create(arg_size);
-            reg1.SetScriptObject(ref.Obj, ref.Mgr);
+            reg1.SetScriptObject(ref.Obj(), ref.Mgr());
             break;
         }
         case SCMD_FADD:
@@ -1586,7 +1586,7 @@ ccInstError ccInstance::Run(int32_t curpc)
             auto &reg1 = _registers[codeOp.Arg1i()];
             const char *ptr = reinterpret_cast<const char*>(reg1.GetDirectPtr());
             DynObjectRef ref = ScriptString::Create(ptr);
-            reg1.SetScriptObject(ref.Obj, &myScriptStringImpl);
+            reg1.SetScriptObject(ref.Obj(), &myScriptStringImpl);
             break;
         }
         case SCMD_STRINGSEQUAL:

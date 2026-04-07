@@ -277,6 +277,7 @@ target_sources(engine
     ac/timer.h
     ac/translation.cpp
     ac/translation.h
+    ac/utils_script.cpp
     ac/viewframe.cpp
     ac/viewframe.h
     ac/viewport_script.cpp
