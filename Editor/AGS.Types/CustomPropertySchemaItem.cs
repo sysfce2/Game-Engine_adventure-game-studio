@@ -140,6 +140,7 @@ namespace AGS.Types
             this.AppliesToInvItems = schemaItem.AppliesToInvItems;
             this.AppliesToObjects = schemaItem.AppliesToObjects;
             this.AppliesToRooms = schemaItem.AppliesToRooms;
+            this.Translated = schemaItem.Translated;
         }
 
         public object Clone()

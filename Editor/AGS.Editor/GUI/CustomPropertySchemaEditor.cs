@@ -17,11 +17,13 @@ namespace AGS.Editor
         private const string MENU_ITEM_DELETE = "DeleteSchemaItem";
 
         private CustomPropertySchema _schema;
+        private CustomPropertySchema _srcSchema;
 
         public CustomPropertySchemaEditor(CustomPropertySchema schema)
         {
             InitializeComponent();
-            _schema = schema;
+            _srcSchema = schema;
+            _schema = new CustomPropertySchema(schema);
         }
 
         private void RepopulateListView()
@@ -69,19 +71,6 @@ namespace AGS.Editor
             }
         }
 
-        private bool IsThereACustomPropertyWithThisName(string nameToCheckLowerCase)
-        {
-            foreach (CustomPropertySchemaItem item in _schema.PropertyDefinitions)
-            {
-                if (item.Name.ToLowerInvariant() == nameToCheckLowerCase)
-                {
-                    MessageBox.Show("You already have a property with this name.", "Property already exists", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return true;
-                }
-            }
-            return false;
-        }
-
         private void EditOrAddItem(CustomPropertySchemaItem schemaItem)
         {
             bool isNewItem = false;
@@ -91,15 +80,12 @@ namespace AGS.Editor
                 schemaItem.Type = CustomPropertyType.Boolean;
                 isNewItem = true;
             }
-            CustomPropertySchemaItemEditor itemEditor = new CustomPropertySchemaItemEditor(schemaItem, isNewItem);
+            CustomPropertySchemaItemEditor itemEditor = new CustomPropertySchemaItemEditor(schemaItem, isNewItem, _schema);
             if (itemEditor.ShowDialog() == DialogResult.OK)
             {
                 if (isNewItem)
                 {
-                    if (!IsThereACustomPropertyWithThisName(schemaItem.Name.ToLowerInvariant()))
-                    {
-                        _schema.PropertyDefinitions.Add(schemaItem);
-                    }
+                    _schema.PropertyDefinitions.Add(schemaItem);
                 }
                 RepopulateListView();
             }
@@ -145,6 +131,12 @@ namespace AGS.Editor
         }
 
         private void btnOK_Click(object sender, EventArgs e)
+        {
+            _srcSchema.CopyFrom(_schema);
+            this.Close();
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
         {
             this.Close();
         }

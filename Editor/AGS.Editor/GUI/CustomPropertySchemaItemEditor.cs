@@ -11,11 +11,13 @@ namespace AGS.Editor
 {
     public partial class CustomPropertySchemaItemEditor : Form
     {
+        private CustomPropertySchema _schema;
         private CustomPropertySchemaItem _itemToEdit;
         private CustomPropertySchemaItem _copyOfItem;
 
-        public CustomPropertySchemaItemEditor(CustomPropertySchemaItem item, bool isNewItem)
+        public CustomPropertySchemaItemEditor(CustomPropertySchemaItem item, bool isNewItem, CustomPropertySchema schema)
         {
+            _schema = schema;
             _itemToEdit = item;
             _copyOfItem = (CustomPropertySchemaItem)item.Clone();
             InitializeComponent();
@@ -43,6 +45,14 @@ namespace AGS.Editor
             if (_copyOfItem.Name == string.Empty)
             {
                 MessageBox.Show("You must enter a name for the new property.", "Name missing", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtName.Focus();
+                return;
+            }
+            // Test if there is no item of this name, except for the item which we current edit
+            if (_schema.PropertyDefinitions.Find(pd => pd != _itemToEdit && pd.Name.ToLowerInvariant() == _copyOfItem.Name) != null)
+            {
+                MessageBox.Show("You already have a property with this name.", "Property already exists", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtName.Focus();
                 return;
             }
             if (propertyType == CustomPropertyType.Boolean)
@@ -52,6 +62,7 @@ namespace AGS.Editor
                     (_copyOfItem.DefaultValue != "0"))
                 {
                     MessageBox.Show("The default value for a Boolean item must be 0 or 1.", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtDefaultValue.Focus();
                     return;
                 }
             }
@@ -61,19 +72,13 @@ namespace AGS.Editor
                 if (!Int32.TryParse(_copyOfItem.DefaultValue, out result))
                 {
                     MessageBox.Show("The default value for a Number item must be a valid integer.", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtDefaultValue.Focus();
                     return;
                 }
             }
-            _itemToEdit.Name = _copyOfItem.Name;
-            _itemToEdit.Description = _copyOfItem.Description;
-            _itemToEdit.DefaultValue = _copyOfItem.DefaultValue;
-            _itemToEdit.Type = propertyType;
-            _itemToEdit.AppliesToCharacters = _copyOfItem.AppliesToCharacters;
-            _itemToEdit.AppliesToHotspots = _copyOfItem.AppliesToHotspots;
-            _itemToEdit.AppliesToInvItems = _copyOfItem.AppliesToInvItems;
-            _itemToEdit.AppliesToObjects = _copyOfItem.AppliesToObjects;
-            _itemToEdit.AppliesToRooms = _copyOfItem.AppliesToRooms;
-            _itemToEdit.Translated = _copyOfItem.Translated;
+            _copyOfItem.Type = propertyType;
+
+            _itemToEdit.CopyFrom(_copyOfItem);
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
