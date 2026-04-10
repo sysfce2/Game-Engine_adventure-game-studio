@@ -33,10 +33,8 @@ namespace AGS.Editor
             chkTranslated.DataBindings.Add("Checked", _copyOfItem, "Translated", true, DataSourceUpdateMode.OnPropertyChanged);
             cmbType.SelectedIndex = ((int)_copyOfItem.Type) - 1;
 
-            if (!isNewItem)
-            {
-                txtName.Enabled = false;
-            }
+            txtName.Enabled = isNewItem;
+            btnRename.Enabled = !isNewItem;
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -49,7 +47,7 @@ namespace AGS.Editor
                 return;
             }
             // Test if there is no item of this name, except for the item which we current edit
-            if (_schema.PropertyDefinitions.Find(pd => pd != _itemToEdit && pd.Name.ToLowerInvariant() == _copyOfItem.Name) != null)
+            if (_schema.PropertyDefinitions.Find(pd => pd != _itemToEdit && pd.Name.ToLowerInvariant() == _copyOfItem.Name.ToLowerInvariant()) != null)
             {
                 MessageBox.Show("You already have a property with this name.", "Property already exists", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtName.Focus();
@@ -98,6 +96,16 @@ namespace AGS.Editor
         private void cmbType_SelectedIndexChanged(object sender, EventArgs e)
         {
             chkTranslated.Enabled = ((CustomPropertyType)(cmbType.SelectedIndex + 1)) == CustomPropertyType.Text;
+        }
+
+        private void btnRename_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to rename this property? Editor will automatically replace it in all objects in the game that currently have this property set (including rooms)."
+                + $"{Environment.NewLine}But you will have to fix all of its uses in script by hand!", "Confirm rename", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                txtName.Enabled = true;
+                btnRename.Enabled = false;
+            }
         }
     }
 }

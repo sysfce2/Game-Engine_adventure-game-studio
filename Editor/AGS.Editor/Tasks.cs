@@ -1390,5 +1390,62 @@ namespace AGS.Editor
                 return null;
             return scripts.Name;
         }
+
+        private void ApplyCustomPropertySchemaChanges(List<CustomProperties> allProps, List<CustomPropertyDefChange> schemaChanges)
+        {
+            if (allProps.Count == 0 || schemaChanges.Count == 0)
+                return;
+
+            foreach (var props in allProps)
+            {
+                if (props.PropertyValues.Count == 0)
+                    continue;
+
+                foreach (var change in schemaChanges)
+                {
+                    if (change.Type == CustomPropertyDefChangeType.Remove)
+                    {
+                        props.PropertyValues.Remove(change.OriginalName);
+                    }
+                    else if (change.Type == CustomPropertyDefChangeType.Edit &&
+                        change.NewName.ToLowerInvariant() != change.OriginalName.ToLowerInvariant())
+                    {
+                        if (props.PropertyValues.ContainsKey(change.OriginalName))
+                        {
+                            var oldProp = props.PropertyValues[change.OriginalName];
+                            props.PropertyValues.Remove(change.OriginalName);
+                            oldProp.Name = change.NewName;
+                            props.PropertyValues.Add(change.NewName, oldProp);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ApplyCustomPropertySchemaChangesInRoom(Room room, List<CustomPropertyDefChange> schemaChanges)
+        {
+            List<CustomProperties> allProps = new List<CustomProperties>();
+            allProps.Add(room.Properties);
+            foreach(var o in room.Objects)
+                allProps.Add(o.Properties);
+            foreach (var h in room.Hotspots)
+                allProps.Add(h.Properties);
+            ApplyCustomPropertySchemaChanges(allProps, schemaChanges);
+            room.Modified = true;
+        }
+
+        public void HandleCustomPropertySchemaChanges(List<CustomPropertyDefChange> schemaChanges)
+        {
+            List<CustomProperties> allProps = new List<CustomProperties>();
+            var game = AGSEditor.Instance.CurrentGame;
+            foreach (var c in game.Characters)
+                allProps.Add(c.Properties);
+            foreach (var i in game.InventoryItems)
+                allProps.Add(i.Properties);
+            ApplyCustomPropertySchemaChanges(allProps, schemaChanges);
+
+            ComponentController.Instance.FindComponent<RoomsComponent>()?
+                .ModifyAllRooms((r, m) => { ApplyCustomPropertySchemaChangesInRoom(r, schemaChanges); });
+        }
     }
 }

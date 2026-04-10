@@ -7,7 +7,6 @@ using System.Windows.Forms;
 using System.Xml;
 using AGS.Types;
 using AGS.Editor.TextProcessing;
-using System.Linq;
 
 namespace AGS.Editor.Components
 {
