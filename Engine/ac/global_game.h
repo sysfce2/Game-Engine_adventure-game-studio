@@ -76,7 +76,7 @@ struct SaveItemCmpByDesc
     bool operator()(const SaveListItem &item1, const SaveListItem &item2) const
     {
         return std::use_facet<std::collate<char>>(_loc).
-            compare(item1.Description.GetCStr(), item1.Description.GetCStr() + item1.Description.GetLength(), item2.Description.GetCStr(), item2.Description.GetCStr() + item2.Description.GetLength()) == 0;
+            compare(item1.Description.GetCStr(), item1.Description.GetCStr() + item1.Description.GetLength(), item2.Description.GetCStr(), item2.Description.GetCStr() + item2.Description.GetLength()) < 0;
     }
 
 private:

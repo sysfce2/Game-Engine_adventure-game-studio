@@ -263,8 +263,10 @@ struct FileEntryEqByNameLexographicalCI
 
     bool operator()(const FileEntry &fe1, const FileEntry &fe2) const
     {
+        const String f1lower = fe1.Name.LowerUTF8();
+        const String f2lower = fe2.Name.LowerUTF8();
         return std::use_facet<std::collate<char>>(_loc).
-            compare(fe1.Name.GetCStr(), fe1.Name.GetCStr() + fe1.Name.GetLength(), fe2.Name.GetCStr(), fe2.Name.GetCStr() + fe2.Name.GetLength()) == 0;
+            compare(f1lower.GetCStr(), f1lower.GetCStr() + f1lower.GetLength(), f2lower.GetCStr(), f2lower.GetCStr() + f2lower.GetLength()) == 0;
     }
 
 private:
@@ -308,8 +310,10 @@ struct FileEntryCmpByNameLexographicalCI
 
     bool operator()(const FileEntry &fe1, const FileEntry &fe2) const
     {
+        const String f1lower = fe1.Name.LowerUTF8();
+        const String f2lower = fe2.Name.LowerUTF8();
         return std::use_facet<std::collate<char>>(_loc).
-            compare(fe1.Name.GetCStr(), fe1.Name.GetCStr() + fe1.Name.GetLength(), fe2.Name.GetCStr(), fe2.Name.GetCStr() + fe2.Name.GetLength()) < 0;
+            compare(f1lower.GetCStr(), f1lower.GetCStr() + f1lower.GetLength(), f2lower.GetCStr(), f2lower.GetCStr() + f2lower.GetLength()) < 0;
     }
 
 private:

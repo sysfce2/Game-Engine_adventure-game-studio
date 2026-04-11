@@ -48,8 +48,8 @@ int StrUtil::LexographicalCompareNoCase(const String &s1, const String &s2, cons
     {
         const auto loc = std::locale(locale_name);
         const auto &fac_c = std::use_facet<std::collate<char>>(loc);
-        String s1lower = s1.LowerUTF8();
-        String s2lower = s2.LowerUTF8();
+        const String s1lower = s1.LowerUTF8();
+        const String s2lower = s2.LowerUTF8();
         return fac_c.compare(s1lower.GetCStr(), s1lower.GetCStr() + s1lower.GetLength(), s2lower.GetCStr(), s2lower.GetCStr() + s2lower.GetLength());
     }
     catch (const std::runtime_error&)

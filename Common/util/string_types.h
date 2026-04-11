@@ -175,8 +175,8 @@ struct LexographicalStrLessNoCase
 
     bool operator()(const String &s1, const String &s2) const
     {
-        String s1lower = s1.LowerUTF8();
-        String s2lower = s2.LowerUTF8();
+        const String s1lower = s1.LowerUTF8();
+        const String s2lower = s2.LowerUTF8();
         return std::use_facet<std::collate<char>>(_loc).
             compare(s1lower.GetCStr(), s1lower.GetCStr() + s1lower.GetLength(), s2lower.GetCStr(), s2lower.GetCStr() + s2lower.GetLength()) < 0;
     }
