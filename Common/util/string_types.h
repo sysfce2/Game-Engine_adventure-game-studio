@@ -17,6 +17,7 @@
 #include <cctype>
 #include <functional>
 #include <locale>
+#include <stdexcept>
 #include <unordered_map>
 
 #include <array>

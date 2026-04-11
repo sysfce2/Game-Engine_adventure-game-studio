@@ -16,6 +16,7 @@
 #include "ac/file.h"
 #include "ac/common.h"
 #include "ac/game.h"
+#include "ac/gamestate.h"
 #include "ac/gamesetup.h"
 #include "ac/gamesetupstruct.h"
 #include "ac/global_file.h"
@@ -41,6 +42,7 @@ using namespace AGS::Common;
 using namespace AGS::Engine;
 
 extern GameSetupStruct game;
+extern GamePlayState play;
 extern AGSPlatformDriver *platform;
 
 // object-based File routines
@@ -138,6 +140,9 @@ void FillDirList(std::vector<String> &files, const String &pattern, ScriptFileSo
         return;
 
     std::vector<FileEntry> fileents;
+    const FileEntryCmpByNameLexographicalCI fileent_name_less(play.GetTextLocaleName().GetCStr());
+    const FileEntryEqByNameLexographicalCI fileent_name_eq(play.GetTextLocaleName().GetCStr());
+
     if (rp.AssetMgr)
     {
         // AssetManager returns asset entries with possibly parent paths,
@@ -160,13 +165,13 @@ void FillDirList(std::vector<String> &files, const String &pattern, ScriptFileSo
             {
                 std::vector<FileEntry> fileents_alt;
                 FillDirList(fileents_alt, alt_rp.Loc, Path::GetFilename(alt_rp.FullPath));
-                std::sort(fileents.begin(), fileents.end(), FileEntryCmpByNameCI());
+                std::sort(fileents.begin(), fileents.end(), fileent_name_less);
                 // TODO: following algorithm pushes element if not matching any existing;
                 // pick this out as a common algorithm somewhere?
                 size_t src_size = fileents.size();
                 for (const auto &alt_fe : fileents_alt)
                 {
-                    if (std::binary_search(fileents.begin(), fileents.begin() + src_size, alt_fe, FileEntryEqByNameCI()))
+                    if (std::binary_search(fileents.begin(), fileents.begin() + src_size, alt_fe, fileent_name_eq))
                         continue;
                     fileents.push_back(alt_fe);
                 }
@@ -179,9 +184,9 @@ void FillDirList(std::vector<String> &files, const String &pattern, ScriptFileSo
     {
     case kScFileSort_Name:
         if (ascending)
-            std::sort(fileents.begin(), fileents.end(), FileEntryCmpByNameCI());
+            std::sort(fileents.begin(), fileents.end(), fileent_name_less);
         else
-            std::sort(fileents.rbegin(), fileents.rend(), FileEntryCmpByNameCI());
+            std::sort(fileents.rbegin(), fileents.rend(), fileent_name_less);
         break;
     case kScFileSort_Time:
         if (ascending)

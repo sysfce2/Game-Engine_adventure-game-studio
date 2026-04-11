@@ -18,6 +18,8 @@
 #ifndef __AGS_EE_AC__GLOBALGAME_H
 #define __AGS_EE_AC__GLOBALGAME_H
 
+#include <locale>
+#include <stdexcept>
 #include <time.h>
 #include "ac/runtime_defines.h"
 #include "util/string.h"
@@ -54,10 +56,31 @@ struct SaveItemCmpByTime
 
 struct SaveItemCmpByDesc
 {
+    SaveItemCmpByDesc()
+        : _loc(std::locale())
+    {
+    }
+
+    SaveItemCmpByDesc(const char *locale_name)
+    {
+        try
+        {
+            _loc = std::locale(locale_name);
+        }
+        catch (const std::runtime_error&)
+        {
+            _loc = std::locale();
+        }
+    }
+
     bool operator()(const SaveListItem &item1, const SaveListItem &item2) const
     {
-        return item1.Description.Compare(item2.Description) < 0;
+        return std::use_facet<std::collate<char>>(_loc).
+            compare(item1.Description.GetCStr(), item1.Description.GetCStr() + item1.Description.GetLength(), item2.Description.GetCStr(), item2.Description.GetCStr() + item2.Description.GetLength()) == 0;
     }
+
+private:
+    std::locale _loc;
 };
 
 

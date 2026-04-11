@@ -18,9 +18,11 @@
 #ifndef __AGS_CN_UTIL__DIRECTORY_H
 #define __AGS_CN_UTIL__DIRECTORY_H
 
+#include <locale>
 #include <memory>
 #include <regex>
 #include <stack>
+#include <stdexcept>
 #include <vector>
 #include "platform/platform.h"
 #include "util/string.h"
@@ -240,6 +242,35 @@ struct FileEntryEqByNameCI
     }
 };
 
+struct FileEntryEqByNameLexographicalCI
+{
+    FileEntryEqByNameLexographicalCI()
+        : _loc(std::locale())
+    {
+    }
+
+    FileEntryEqByNameLexographicalCI(const char *locale_name)
+    {
+        try
+        {
+            _loc = std::locale(locale_name);
+        }
+        catch (const std::runtime_error&)
+        {
+            _loc = std::locale();
+        }
+    }
+
+    bool operator()(const FileEntry &fe1, const FileEntry &fe2) const
+    {
+        return std::use_facet<std::collate<char>>(_loc).
+            compare(fe1.Name.GetCStr(), fe1.Name.GetCStr() + fe1.Name.GetLength(), fe2.Name.GetCStr(), fe2.Name.GetCStr() + fe2.Name.GetLength()) == 0;
+    }
+
+private:
+    std::locale _loc;
+};
+
 struct FileEntryCmpByName
 {
     bool operator()(const FileEntry &fe1, const FileEntry &fe2) const
@@ -254,6 +285,35 @@ struct FileEntryCmpByNameCI
     {
         return fe1.Name.CompareNoCase(fe2.Name) < 0;
     }
+};
+
+struct FileEntryCmpByNameLexographicalCI
+{
+    FileEntryCmpByNameLexographicalCI()
+        : _loc(std::locale())
+    {
+    }
+
+    FileEntryCmpByNameLexographicalCI(const char *locale_name)
+    {
+        try
+        {
+            _loc = std::locale(locale_name);
+        }
+        catch (const std::runtime_error&)
+        {
+            _loc = std::locale();
+        }
+    }
+
+    bool operator()(const FileEntry &fe1, const FileEntry &fe2) const
+    {
+        return std::use_facet<std::collate<char>>(_loc).
+            compare(fe1.Name.GetCStr(), fe1.Name.GetCStr() + fe1.Name.GetLength(), fe2.Name.GetCStr(), fe2.Name.GetCStr() + fe2.Name.GetLength()) < 0;
+    }
+
+private:
+    std::locale _loc;
 };
 
 struct FileEntryCmpByTime
