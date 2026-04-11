@@ -37,6 +37,20 @@ namespace StrUtil
         kOutOfRange // the resulting value is out of range
     };
 
+    // Compares two strings lexographically, by the meaning of their characters
+    // rather than their code values. For example, 'À' follows 'A' and 'Č'
+    // follows 'C', as opposed to common char code-based comparison, where 'À'
+    // is positioned after 'Z'.
+    int             LexographicalCompare(const String &s1, const String &s2, const char *locale_name = "");
+    inline int      LexographicalCompare(const char *cstr1, const char *cstr2, const char *locale_name = "")
+                        { return LexographicalCompare(String::Wrapper(cstr1), String::Wrapper(cstr2), locale_name); }
+    // Compares two strings lexographically and case-insensitively.
+    // For example, 'À' follows 'A' and 'Č' follows 'C', as opposed to common
+    // char code-based comparison, where 'À' is positioned after 'Z'.
+    int             LexographicalCompareNoCase(const String &s1, const String &s2, const char *locale_name = "");
+    inline int      LexographicalCompareNoCase(const char* cstr1, const char* cstr2, const char* locale_name = "")
+                        { return LexographicalCompareNoCase(String::Wrapper(cstr1), String::Wrapper(cstr2), locale_name); }
+
     // Convert integer to string, by printing its value
     String          IntToString(int val);
     // Tries to convert whole string into integer value;
@@ -173,6 +187,11 @@ namespace StrUtil
     // Convert wide-string to utf-8 string;
     // writes into out_mbstr buffer limited by out_sz *bytes*; returns *bytes* written.
     size_t ConvertWstrToUtf8(const wchar_t *wcstr, char *out_mbstr, size_t out_sz);
+
+    // Tries to find a UTF8 locale name for the given language name,
+    // suitable for the current runtime backend. Returns the locale name found,
+    // or empty string if none was found.
+    String FindCompatibleUTF8LocaleName(const String &lang_name);
 }
 } // namespace Common
 } // namespace AGS

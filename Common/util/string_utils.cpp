@@ -28,6 +28,36 @@ namespace AGS
 namespace Common
 {
 
+int StrUtil::LexographicalCompare(const String &s1, const String &s2, const char *locale_name)
+{
+    try
+    {
+        const auto loc = std::locale(locale_name);
+        const auto &fac_c = std::use_facet<std::collate<char>>(loc);
+        return fac_c.compare(s1.GetCStr(), s1.GetCStr() + s1.GetLength(), s2.GetCStr(), s2.GetCStr() + s2.GetLength());
+    }
+    catch (const std::runtime_error&)
+    {
+        return s1.Compare(s2);
+    }
+}
+
+int StrUtil::LexographicalCompareNoCase(const String &s1, const String &s2, const char *locale_name)
+{
+    try
+    {
+        const auto loc = std::locale(locale_name);
+        const auto &fac_c = std::use_facet<std::collate<char>>(loc);
+        String s1lower = s1.LowerUTF8();
+        String s2lower = s2.LowerUTF8();
+        return fac_c.compare(s1lower.GetCStr(), s1lower.GetCStr() + s1lower.GetLength(), s2lower.GetCStr(), s2lower.GetCStr() + s2lower.GetLength());
+    }
+    catch (const std::runtime_error&)
+    {
+        return Utf8::StrCmpNoCase(s1.GetCStr(), s2.GetCStr());
+    }
+}
+
 String StrUtil::IntToString(int d)
 {
     return String::FromFormat("%d", d);
@@ -391,6 +421,43 @@ size_t StrUtil::ConvertWstrToUtf8(const wchar_t *wcstr, char *out_mbstr, size_t 
     }
     *out_mbstr = 0;
     return len;
+}
+
+static bool TryUTF8LocaleName(const String &locale_name)
+{
+    try
+    {
+        auto locale = std::locale(locale_name.GetCStr());
+        if (locale_name.CompareNoCase(locale.name().c_str()) == 0)
+            return true;
+    }
+    catch (const std::runtime_error&)
+    {
+    }
+    return false;
+}
+
+String StrUtil::FindCompatibleUTF8LocaleName(const String &lang_name)
+{
+    if (lang_name.IsEmpty())
+        return "";
+
+    String locale_name = lang_name;
+    locale_name.Replace('-', '_');
+    // Try several suffix variants which are commonly supported by the C++ runtime libs
+    String try_locale = String::FromFormat("%s.utf8", locale_name.GetCStr());
+    if (TryUTF8LocaleName(try_locale))
+        return try_locale;
+    try_locale = String::FromFormat("%s.utf-8", locale_name.GetCStr());
+    if (TryUTF8LocaleName(try_locale))
+        return try_locale;
+    try_locale = String::FromFormat("%s.UTF8", locale_name.GetCStr());
+    if (TryUTF8LocaleName(try_locale))
+        return try_locale;
+    try_locale = String::FromFormat("%s.UTF-8", locale_name.GetCStr());
+    if (TryUTF8LocaleName(try_locale))
+        return try_locale;
+    return "";
 }
 
 } // namespace Common

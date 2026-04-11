@@ -16,6 +16,8 @@
 
 #include <cctype>
 #include <functional>
+#include <locale>
+#include <stdexcept>
 #include <unordered_map>
 
 #include <array>
@@ -104,13 +106,83 @@ private:
     String _lookFor;
 };
 
-// Case-insensitive String less
+// Case-insensitive String less predicate
 struct StrLessNoCase
 {
     bool operator()(const String &s1, const String &s2) const
     {
         return s1.CompareNoCase(s2) < 0;
     }
+};
+
+// Unicode String less predicate, comparing strings lexographically.
+// With this predicate, characters are compared by their meaning; for example,
+// 'À' follows 'A' and 'Č' follows 'C', as opposed to common char code-based
+// comparison, where 'À' is positioned after 'Z'.
+struct LexographicalStrLess
+{
+public:
+    LexographicalStrLess()
+        : _loc(std::locale())
+    {
+    }
+
+    LexographicalStrLess(const char *locale_name)
+    {
+        try
+        {
+            _loc = std::locale(locale_name);
+        }
+        catch (const std::runtime_error&)
+        {
+            _loc = std::locale();
+        }
+    }
+
+    bool operator()(const String &s1, const String &s2) const
+    {
+        return std::use_facet<std::collate<char>>(_loc).
+            compare(s1.GetCStr(), s1.GetCStr() + s1.GetLength(), s2.GetCStr(), s2.GetCStr() + s2.GetLength()) < 0;
+    }
+
+private:
+    std::locale _loc;
+};
+
+// Unicode String less predicate, comparing strings lexographically, and
+// case-insensitively.
+// With this predicate, characters are compared by their meaning; for example,
+// 'À' follows 'A' and 'Č' follows 'C', as opposed to common char code-based
+// comparison, where 'À' is positioned after 'Z'.
+struct LexographicalStrLessNoCase
+{
+    LexographicalStrLessNoCase()
+        : _loc(std::locale())
+    {
+    }
+
+    LexographicalStrLessNoCase(const char *locale_name)
+    {
+        try
+        {
+            _loc = std::locale(locale_name);
+        }
+        catch (const std::runtime_error&)
+        {
+            _loc = std::locale();
+        }
+    }
+
+    bool operator()(const String &s1, const String &s2) const
+    {
+        String s1lower = s1.LowerUTF8();
+        String s2lower = s2.LowerUTF8();
+        return std::use_facet<std::collate<char>>(_loc).
+            compare(s1lower.GetCStr(), s1lower.GetCStr() + s1lower.GetLength(), s2lower.GetCStr(), s2lower.GetCStr() + s2lower.GetLength()) < 0;
+    }
+
+private:
+    std::locale _loc;
 };
 
 // Compute case-insensitive hash for a String object

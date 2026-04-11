@@ -535,6 +535,11 @@ void UpgradeGame(GameSetupStruct &game, GameDataVersion data_ver)
     {
         game.options[OPT_GAMEFPS] = 40; // default to 40 fps in the older games
     }
+
+    if (game.GameInfo.count("text_lang") > 0)
+    {
+        game.GameTextLanguage = game.GameInfo["text_lang"];
+    }
 }
 
 void UpgradeDialogs(GameSetupStruct &game, LoadedGameEntities &ents, GameDataVersion data_ver)

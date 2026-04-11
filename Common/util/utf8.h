@@ -1044,6 +1044,24 @@ inline size_t CStrToLower(const char *src, char *dst, size_t dst_sz)
     }
 }
 
+inline int StrCmpNoCase(const char* cstr1, const char* cstr2)
+{
+    for (;;)
+    {
+        Rune c1, c2;
+        cstr1 += GetChar(cstr1, UtfSz, &c1);
+        cstr2 += GetChar(cstr2, UtfSz, &c2);
+        c1 = ToLower(c1);
+        c2 = ToLower(c2);
+
+        if (c1 != c2)
+            return c1 - c2;
+
+        if (!c1)
+            return 0;
+    }
+}
+
 } // namespace Utf8
 
 #endif // __AGS_CN_UTIL__UTF8_H

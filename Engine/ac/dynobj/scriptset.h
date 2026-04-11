@@ -64,12 +64,16 @@ private:
 };
 
 template <typename TSet, bool is_sorted, bool is_casesensitive>
-class ScriptSetImpl final : public ScriptSetBase
+class ScriptSetImpl : public ScriptSetBase
 {
 public:
     typedef typename TSet::const_iterator ConstIterator;
 
     ScriptSetImpl() = default;
+    ScriptSetImpl(const TSet &set)
+        : _set(set) { }
+    ScriptSetImpl(TSet &&set)
+        : _set(std::move(set)) { }
 
     bool IsCaseSensitive() const override { return is_casesensitive; }
     bool IsSorted() const override { return is_sorted; }
@@ -142,9 +146,30 @@ private:
     TSet _set;
 };
 
-typedef ScriptSetImpl< std::set<String>, true, true > ScriptSet;
-typedef ScriptSetImpl< std::set<String, StrLessNoCase>, true, false > ScriptSetCI;
-typedef ScriptSetImpl< std::unordered_set<String>, false, true > ScriptHashSet;
-typedef ScriptSetImpl< std::unordered_set<String, HashStrNoCase, StrEqNoCase>, false, false > ScriptHashSetCI;
+template <typename TKey, typename TLess, bool is_sorted, bool is_casesensitive>
+class ScriptSetSet final : public ScriptSetImpl<std::set<TKey, TLess>, is_sorted, is_casesensitive>
+{
+public:
+    ScriptSetSet() = default;
+    ScriptSetSet(const TLess &less)
+        : ScriptSetImpl<std::set<TKey, TLess>, is_sorted, is_casesensitive>
+        (std::move(std::set<TKey, TLess>(less)))
+    {
+    }
+};
+
+template <typename TKey, typename THash, typename TEqual, bool is_sorted, bool is_casesensitive>
+class ScriptSetHashSet final : public ScriptSetImpl<std::unordered_set<TKey, THash, TEqual>, is_sorted, is_casesensitive>
+{
+public:
+    ScriptSetHashSet() = default;
+};
+
+typedef ScriptSetSet< String, std::less<String>, true, true > ScriptSet;
+typedef ScriptSetSet< String, StrLessNoCase, true, false > ScriptSetCI;
+typedef ScriptSetSet< String, LexographicalStrLess, true, true > ScriptSetUnicode;
+typedef ScriptSetSet< String, LexographicalStrLessNoCase, true, false > ScriptSetUnicodeCI;
+typedef ScriptSetHashSet< String, std::hash<String>, std::equal_to<String>, false, true > ScriptHashSet;
+typedef ScriptSetHashSet< String, HashStrNoCase, StrEqNoCase, false, false > ScriptHashSetCI;
 
 #endif // __AC_SCRIPTSET_H

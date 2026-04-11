@@ -120,9 +120,10 @@ namespace AGS.Editor
          * 3.6.3.5        - Renamed ShadowColor -> BorderShadeColor.
          * 3.6.3.6        - Character.BlockingRectangle, RoomObject.BlockingRectangle.
          *                  expose Character.Transparency, Baseline, RoomObject.Transparency.
-         * 3.6.3.8        - New Translation settings, TextOutlineColor in GUI controls.
+         * 3.6.3.8        - Font Overrides in Translation, TextOutlineColor in GUI controls.
+         * 3.6.3.10       - GameTextLanguage.
         */
-        public const int    LATEST_XML_VERSION_INDEX = 3060308;
+        public const int    LATEST_XML_VERSION_INDEX = 3060310;
         /*
          * LATEST_USER_DATA_VERSION is the last version of the user data file that used a
          * 4-point-4-number string to identify the version of AGS that saved the file.
