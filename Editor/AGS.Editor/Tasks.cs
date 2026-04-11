@@ -1301,6 +1301,7 @@ namespace AGS.Editor
             {
                 var loadedRoom = Factory.NativeProxy.LoadRoom((UnloadedRoom)room, oldEnc);
                 Factory.NativeProxy.SaveRoom(loadedRoom);
+                Factory.NativeProxy.UnloadRoom(loadedRoom);
             }
             // Save game with a new encoding
             if (Factory.GUIController.InvokeRequired)

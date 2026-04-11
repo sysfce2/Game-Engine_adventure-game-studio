@@ -49,7 +49,9 @@ extern bool initialize_native();
 extern void shutdown_native();
 extern AGS::Types::Game^ import_compiled_game_dta(const AGSString &filename);
 extern void free_old_game_data();
-extern AGS::Types::Room^ load_crm_file(UnloadedRoom ^roomToLoad, System::Text::Encoding ^defEncoding);
+extern AGS::Types::Room^ load_room_for_editing(UnloadedRoom ^roomToLoad, System::Text::Encoding ^defEncoding);
+extern AGS::Types::Room^ load_room(UnloadedRoom ^roomToLoad, System::Text::Encoding ^defEncoding);
+extern void unload_room(AGS::Types::Room^ room);
 extern void save_crm_file(Room ^roomToSave);
 extern void save_default_crm_file(Room ^roomToSave);
 extern HAGSError import_sci_font(const AGSString &filename, int fslot);
@@ -589,10 +591,20 @@ namespace AGS
 			return load_sprite_dimensions();
 		}
 
-		AGS::Types::Room^ NativeMethods::LoadRoomFile(UnloadedRoom^ roomToLoad, System::Text::Encoding ^defEncoding)
+		AGS::Types::Room^ NativeMethods::LoadRoomForEditing(UnloadedRoom^ roomToLoad, System::Text::Encoding ^defEncoding)
 		{
-			return load_crm_file(roomToLoad, defEncoding);
+			return load_room_for_editing(roomToLoad, defEncoding);
 		}
+
+        AGS::Types::Room^ NativeMethods::LoadRoom(UnloadedRoom^ roomToLoad, System::Text::Encoding ^defEncoding)
+        {
+            return load_room(roomToLoad, defEncoding);
+        }
+
+        void NativeMethods::UnloadRoom(Room^ room)
+        {
+            unload_room(room);
+        }
 
 		void NativeMethods::SaveRoomFile(AGS::Types::Room ^roomToSave)
 		{
