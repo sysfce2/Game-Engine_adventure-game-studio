@@ -55,9 +55,9 @@ jobs:
     - name: Set up Tappy
       run: pip install tap.py
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
-    - uses: mymindstorm/setup-emsdk@v14
+    - uses: mymindstorm/setup-emsdk@v16
       if: ${{ matrix.platform.name == 'Emscripten' }}
       with:
         version: 3.1.74
@@ -76,7 +76,7 @@ jobs:
       run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.platform.artifact }}
         path: |
@@ -131,3 +131,62 @@ jobs:
       working-directory: ${{github.workspace}}/build/${{matrix.platform.bindir}}
       run: |
         tappy agstest_software.tap
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+  
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install bsdtar
+        run: |
+          sudo apt-get install -y libarchive-tools
+  
+      - name: Set up Android SDK
+        run: |
+          cd Android && ./and-download-sdk-tools.sh linux
+          echo "${ANDROID_HOME}/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "${ANDROID_HOME}/platform-tools" >> "$GITHUB_PATH"
+          echo "ANDROID_HOME=${ANDROID_HOME}" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=${ANDROID_HOME}" >> "$GITHUB_ENV"
+  
+      - name: Install Android NDK r25
+        run: sdkmanager --install "ndk;25.2.9519653" "build-tools;34.0.0"
+  
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.gradle/caches
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+  
+      - name: Prepare Android build
+        run: cd Android && ./and-build.sh prepare
+  
+      - name: Build debug APK
+        run: cd Android && ./and-build.sh build_debug
+  
+      - name: Build release APK
+        run: cd Android && ./and-build.sh build_release
+  
+      - name: Rename APKs
+        run: cd Android && ./and-build.sh archive_apks
+  
+      - name: Create project archive
+        run: cd Android && ./and-build.sh archive_project
+  
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-apks
+          path: AGS-*.apk
+  
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-project
+          path: AGS-*-android-proj-*.zip
