@@ -144,6 +144,10 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+
+      - name: Install bsdtar
+        run: |
+          sudo apt-get install -y libarchive-tools
   
       - name: Set up Android SDK
         run: |
