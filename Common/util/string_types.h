@@ -131,7 +131,10 @@ public:
     {
         try
         {
-            _loc = std::locale(locale_name);
+            if (locale_name && *locale_name)
+                _loc = std::locale(locale_name);
+            else
+                _loc = std::locale();
         }
         catch (const std::runtime_error&)
         {
@@ -165,7 +168,10 @@ struct LexographicalStrLessNoCase
     {
         try
         {
-            _loc = std::locale(locale_name);
+            if (locale_name && *locale_name)
+                _loc = std::locale(locale_name);
+            else
+                _loc = std::locale();
         }
         catch (const std::runtime_error&)
         {

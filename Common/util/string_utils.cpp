@@ -32,7 +32,7 @@ int StrUtil::LexographicalCompare(const String &s1, const String &s2, const char
 {
     try
     {
-        const auto loc = std::locale(locale_name);
+        const auto loc = (locale_name && *locale_name) ? std::locale(locale_name) : std::locale();
         const auto &fac_c = std::use_facet<std::collate<char>>(loc);
         return fac_c.compare(s1.GetCStr(), s1.GetCStr() + s1.GetLength(), s2.GetCStr(), s2.GetCStr() + s2.GetLength());
     }
@@ -46,7 +46,7 @@ int StrUtil::LexographicalCompareNoCase(const String &s1, const String &s2, cons
 {
     try
     {
-        const auto loc = std::locale(locale_name);
+        const auto loc = (locale_name && *locale_name) ? std::locale(locale_name) : std::locale();
         const auto &fac_c = std::use_facet<std::collate<char>>(loc);
         const String s1lower = s1.LowerUTF8();
         const String s2lower = s2.LowerUTF8();
