@@ -132,7 +132,9 @@ jobs:
       run: |
         tappy agstest_software.tap
 
+
   build-android:
+    name: Android
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -190,3 +192,191 @@ jobs:
         with:
           name: android-project
           path: AGS-*-android-proj-*.zip
+
+
+  windows-msvc-tests:
+    name: Windows MSVC Tests
+    runs-on: windows-latest
+    timeout-minutes: 40
+    env:
+      AGS_LIBOGG_LIB:        C:\Lib\Xiph\x86
+      AGS_LIBTHEORA_LIB:     C:\Lib\Xiph\x86
+      AGS_LIBVORBIS_LIB:     C:\Lib\Xiph\x86
+      AGS_SDL_INCLUDE:       C:\Lib\SDL2\include
+      AGS_SDL_LIB:           C:\Lib\SDL2\lib\x86
+      AGS_SDL_SOUND_INCLUDE: C:\Lib\SDL_sound\src
+      AGS_SDL_SOUND_LIB:     C:\Lib\SDL_sound\lib\x86
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - uses: microsoft/setup-msbuild@v3
+
+      - name: Cache Windows build dependencies
+        id: cache-win-deps
+        uses: actions/cache@v5
+        with:
+          path: C:\Lib
+          key: win-deps-${{ hashFiles('Windows/setup_ags_build_deps.bat') }}
+
+      - name: Install Windows build dependencies
+        if: steps.cache-win-deps.outputs.cache-hit != 'true'
+        shell: cmd
+        run: Windows\setup_ags_build_deps.bat
+
+      - name: Build Compiler test runner (x86)
+        shell: cmd
+        run: |
+          cd Solutions
+          msbuild Compiler.Lib.sln /m /p:MultiProcessorCompilation=true /p:PlatformToolset=v142 /p:Configuration=Release /p:Platform=Win32 /maxcpucount /nologo
+
+      - name: Run Compiler tests (x86)
+        run: Solutions\.test\Release\Compiler.Lib.Test.exe
+
+      - name: Build AGS test runners (x86)
+        shell: cmd
+        run: |
+          cd Solutions
+          msbuild Tests.sln /m /p:MultiProcessorCompilation=true /p:PlatformToolset=v142 /p:Configuration=Release /p:Platform=Win32 /maxcpucount /nologo
+
+      - name: Run Common tests (x86)
+        run: Solutions\.test\Release\Common.Lib.Test.exe
+
+      - name: Run Engine tests (x86)
+        run: Solutions\.test\Release\Engine.App.Test.exe
+
+      - name: Run Tools tests (x86)
+        run: Solutions\.test\Release\Tools.Test.exe
+
+      - name: Clean up
+        shell: cmd
+        run: cd Solutions && rd /s /q .test
+
+      - name: Build Compiler test runner (x64)
+        shell: cmd
+        run: |
+          cd Solutions
+          msbuild Compiler.Lib.sln /m /p:MultiProcessorCompilation=true /p:PlatformToolset=v142 /p:Configuration=Release /p:Platform=x64 /maxcpucount /nologo
+
+      - name: Run Compiler tests (x64)
+        run: Solutions\.test\Release\Compiler.Lib.Test.exe
+
+      - name: Build AGS test runners (x64)
+        shell: cmd
+        run: |
+          cd Solutions
+          msbuild Tests.sln /m /p:MultiProcessorCompilation=true /p:PlatformToolset=v142 /p:Configuration=Release /p:Platform=x64 /maxcpucount /nologo
+
+      - name: Run Common tests (x64)
+        run: Solutions\.test\Release\Common.Lib.Test.exe
+
+      - name: Run Engine tests (x64)
+        run: Solutions\.test\Release\Engine.App.Test.exe
+
+      - name: Run Tools tests (x64)
+        run: Solutions\.test\Release\Tools.Test.exe
+
+
+  windows-msvc-engine:
+    name: Windows MSVC Engine
+    runs-on: windows-latest
+    timeout-minutes: 40
+    env:
+      AGS_LIBOGG_LIB:        C:\Lib\Xiph\x86
+      AGS_LIBTHEORA_LIB:     C:\Lib\Xiph\x86
+      AGS_LIBVORBIS_LIB:     C:\Lib\Xiph\x86
+      AGS_SDL_INCLUDE:       C:\Lib\SDL2\include
+      AGS_SDL_LIB:           C:\Lib\SDL2\lib\x86
+      AGS_SDL_SOUND_INCLUDE: C:\Lib\SDL_sound\src
+      AGS_SDL_SOUND_LIB:     C:\Lib\SDL_sound\lib\x86
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: microsoft/setup-msbuild@v3
+
+      - name: Cache Windows build dependencies
+        id: cache-win-deps
+        uses: actions/cache@v5
+        with:
+          path: C:\Lib
+          key: win-deps-${{ hashFiles('Windows/setup_ags_build_deps.bat') }}
+
+      - name: Install Windows build dependencies
+        if: steps.cache-win-deps.outputs.cache-hit != 'true'
+        shell: cmd
+        run: Windows\setup_ags_build_deps.bat
+
+      - name: Build Engine (x86 Debug)
+        shell: cmd
+        run: |
+          cd Solutions
+          msbuild Engine.sln /m /p:MultiProcessorCompilation=true /p:PlatformToolset=v142 /p:Configuration=Debug /p:Platform=Win32 /maxcpucount /nologo
+
+      - name: Build Tools (x86 Debug)
+        shell: cmd
+        run: |
+          cd Solutions
+          msbuild Tools.sln /m /p:MultiProcessorCompilation=true /p:PlatformToolset=v142 /p:Configuration=Debug /p:Platform=x86 /maxcpucount /nologo
+
+      - name: Build Engine (x86 Release)
+        shell: cmd
+        run: |
+          cd Solutions
+          msbuild Engine.sln /m /p:MultiProcessorCompilation=true /p:PlatformToolset=v142 /p:Configuration=Release /p:Platform=Win32 /maxcpucount /nologo
+
+      - name: Build Tools (x86 Release)
+        shell: cmd
+        run: |
+          cd Solutions
+          msbuild Tools.sln /m /p:MultiProcessorCompilation=true /p:PlatformToolset=v142 /p:Configuration=Release /p:Platform=x86 /maxcpucount /nologo
+
+      - name: Upload x86 Engine PDBs
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-engine-pdb-x86
+          include-hidden-files: true
+          path: Solutions/.build/*/acwin.pdb
+
+      - name: Delete x86 PDB / intermediate files
+        shell: cmd
+        run: |
+          cd Solutions\.build
+          del /s /q *.pdb *.map *.ilk *.iobj *.ipdb
+
+      - name: Upload x86 binaries
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-engine-binaries-x86
+          include-hidden-files: true
+          path: Solutions/.build/*/*
+
+      - name: Delete Win32 build output
+        shell: cmd
+        run: cd Solutions && rd /s /q .build
+
+      - name: Build Engine (x64 Release)
+        shell: cmd
+        run: |
+          cd Solutions
+          msbuild Engine.sln /m /p:MultiProcessorCompilation=true /p:PlatformToolset=v142 /p:Configuration=Release /p:Platform=x64 /maxcpucount /nologo
+
+      - name: Upload x64 Engine PDBs
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-engine-pdb-x64
+          include-hidden-files: true
+          path: Solutions/.build/*/acwin.pdb
+
+      - name: Delete x64 PDB / intermediate files
+        shell: cmd
+        run: |
+          cd Solutions\.build
+          del /s /q *.pdb *.map *.ilk *.iobj *.ipdb
+
+      - name: Upload x64 binaries
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-engine-binaries-x64
+          include-hidden-files: true
+          path: Solutions/.build/*/*
