@@ -606,6 +606,11 @@ namespace AGS.Editor
                 }
             }
 
+            if (xmlVersionIndex < 3060310)
+            {
+                game.Settings.GameTextLanguage = string.Empty;
+            }
+
             System.Version editorVersion = new System.Version(AGS.Types.Version.AGS_EDITOR_VERSION);
             System.Version projectVersion = game.SavedXmlEditorVersion != null ? Types.Utilities.TryParseVersion(game.SavedXmlEditorVersion) : null;
             if (projectVersion == null || projectVersion < editorVersion)
