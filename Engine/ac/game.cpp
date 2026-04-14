@@ -747,6 +747,16 @@ ScriptSortDirection ValidateSortDirection(const char *apiname, int sort_dir)
     return static_cast<ScriptSortDirection>(sort_dir);
 }
 
+ScriptStringComparison ValidateStringComparison(const char* apiname, int case_sensitive)
+{
+    if (case_sensitive < kScCaseInsensitive || case_sensitive > kScCaseSensitive)
+    {
+        debug_script_warn("%s: invalid case sensitivity (%d)", apiname, case_sensitive);
+        return kScCaseInsensitive;
+    }
+    return static_cast<ScriptStringComparison>(case_sensitive);
+}
+
 bool ValidateSaveSlotRange(const char *api_name, int &min_slot, int &max_slot)
 {
     int do_max_slot = std::min(max_slot, TOP_SAVESLOT);
@@ -1120,7 +1130,7 @@ void Game_PrecacheView(int view, int first_loop, int last_loop)
 void *Game_GetSaveSlots(int min_slot, int max_slot, int save_sort, int sort_dir)
 {
     if (!ValidateSaveSlotRange("Game.GetSaveSlots", min_slot, max_slot))
-        return CCDynamicArray::Create(0, sizeof(int32_t), false).Obj;
+        return CCDynamicArray::Create(0, sizeof(int32_t), false).Obj();
     save_sort = ValidateSaveGameSort("Game.GetSaveSlots", save_sort);
     sort_dir = ValidateSortDirection("Game.GetSaveSlots", sort_dir);
 
@@ -1128,10 +1138,10 @@ void *Game_GetSaveSlots(int min_slot, int max_slot, int save_sort, int sort_dir)
     FillSaveList(saves, min_slot, max_slot, false /* no desc */, (ScriptSaveGameSortStyle)save_sort, (ScriptSortDirection)sort_dir);
 
     DynObjectRef arr = CCDynamicArray::Create(saves.size(), sizeof(int32_t), false);
-    int32_t *arr_ptr = static_cast<int32_t*>(arr.Obj);
+    int32_t *arr_ptr = static_cast<int32_t*>(arr.Obj());
     for (const auto &save : saves)
         *(arr_ptr++) = save.Slot;
-    return arr.Obj;
+    return arr.Obj();
 }
 
 extern void prescan_saves(int *dest_arr, size_t dest_count, int min_slot, int max_slot, int file_sort, int sort_dir);

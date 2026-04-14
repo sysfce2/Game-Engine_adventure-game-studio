@@ -170,6 +170,12 @@ enum ScriptSortDirection
     kScSortDescending = 2,
 };
 
+enum ScriptStringComparison
+{
+    kScCaseInsensitive = 0,
+    kScCaseSensitive   = 1
+};
+
 // Script API FileSortStyle
 enum ScriptFileSortStyle
 {

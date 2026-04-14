@@ -2178,6 +2178,8 @@ builtin managed struct ListBox extends GUIControl {
   /// Gets/sets whether the border around the list box is shown.
   import attribute bool ShowBorder;
 #endif // SCRIPT_COMPAT_v363
+  /// Sorts the ListBox in alphabetic order
+  import void SortItems(StringCompareStyle, SortDirection);
   /// Gets/sets whether the clickable scroll arrows are shown.
   import attribute bool ShowScrollArrows;
   /// Gets/sets color of the list item's selection
@@ -3715,8 +3717,7 @@ enum SaveComponentSelection
 };
 
 #ifdef SCRIPT_API_v362
-builtin managed struct RestoredSaveInfo
-{
+builtin managed struct RestoredSaveInfo {
   /// Gets/sets whether this game's save should be cancelled.
   import attribute bool Cancel;
   /// Gets/sets whether this game's save should be reloaded again without particular components.
@@ -3770,6 +3771,13 @@ builtin managed struct RestoredSaveInfo
 };
 #endif
 
+#ifdef SCRIPT_API_v363
+builtin struct Utils {
+  import static void SortStrings(String stringArr[], StringCompareStyle, SortDirection);
+  import static void SortInts(int intArr[], SortDirection);
+  import static void SortFloats(float floatArr[], SortDirection);
+};
+#endif // SCRIPT_API_v363
 
 
 import readonly Character *player;

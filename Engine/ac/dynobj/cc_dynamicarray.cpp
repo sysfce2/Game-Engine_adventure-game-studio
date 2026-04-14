@@ -106,17 +106,17 @@ DynObjectRef DynamicArrayHelpers::CreateStringArray(const std::vector<const char
 {
     // NOTE: we need element size of "handle" for array of managed pointers
     DynObjectRef arr = globalDynamicArray.Create(items.size(), sizeof(int32_t), true);
-    if (!arr.Obj)
+    if (!arr.Obj())
         return arr;
     // Create script strings and put handles into array
-    int32_t *slots = static_cast<int32_t*>(arr.Obj);
+    int32_t *slots = static_cast<int32_t*>(arr.Obj());
     for (auto s : items)
     {
         DynObjectRef str = ScriptString::Create(s);
         // We must add reference count, because the string is going to be saved
         // within another object (array), not returned to script directly
-        ccAddObjectReference(str.Handle);
-        *(slots++) = str.Handle;
+        ccAddObjectReference(str.Handle());
+        *(slots++) = str.Handle();
     }
     return arr;
 }
@@ -125,19 +125,99 @@ DynObjectRef DynamicArrayHelpers::CreateStringArray(const std::vector<String> &i
 {
     // NOTE: we need element size of "handle" for array of managed pointers
     DynObjectRef arr = globalDynamicArray.Create(items.size(), sizeof(int32_t), true);
-    if (!arr.Obj)
+    if (!arr.Obj())
         return arr;
     // Create script strings and put handles into array
-    int32_t *slots = static_cast<int32_t*>(arr.Obj);
+    int32_t *slots = static_cast<int32_t*>(arr.Obj());
     for (auto s : items)
     {
         DynObjectRef str = ScriptString::Create(s.GetCStr());
         // We must add reference count, because the string is going to be saved
         // within another object (array), not returned to script directly
-        ccAddObjectReference(str.Handle);
-        *(slots++) = str.Handle;
+        ccAddObjectReference(str.Handle());
+        *(slots++) = str.Handle();
     }
     return arr;
+}
+
+bool DynamicArrayHelpers::ResolveIntArray(const void *arrobj, std::vector<int> &ints)
+{
+    assert(arrobj);
+    if (!arrobj)
+        return false;
+
+    ints.clear();
+    const auto &header = CCDynamicArray::GetHeader(arrobj);
+    const int *data = static_cast<const int*>(arrobj);
+    ints.reserve(header.GetElemCount());
+    for (uint32_t i = 0; i < header.GetElemCount(); ++i)
+    {
+        ints.push_back(data[i]);
+    }
+    return true;
+}
+
+bool DynamicArrayHelpers::ResolveFloatArray(const void *arrobj, std::vector<float> &floats)
+{
+    assert(arrobj);
+    if (!arrobj)
+        return false;
+
+    floats.clear();
+    const auto &header = CCDynamicArray::GetHeader(arrobj);
+    const float *data = static_cast<const float*>(arrobj);
+    floats.reserve(header.GetElemCount());
+    for (uint32_t i = 0; i < header.GetElemCount(); ++i)
+    {
+        floats.push_back(data[i]);
+    }
+    return true;
+}
+
+bool DynamicArrayHelpers::ResolvePointerArray(const void* arrobj, std::vector<void*> &objects)
+{
+    assert(arrobj);
+    if (!arrobj)
+        return false;
+
+    objects.clear();
+    const auto &header = CCDynamicArray::GetHeader(arrobj);
+    assert(header.IsPointerArray());
+    if (!header.IsPointerArray())
+        return false;
+
+    const uint32_t *handles = static_cast<const uint32_t*>(arrobj);
+    objects.reserve(header.GetElemCount());
+    for (uint32_t i = 0; i < header.GetElemCount(); ++i)
+    {
+        objects.push_back(ccGetObjectAddressFromHandle(handles[i]));
+    }
+    return true;
+}
+
+
+bool DynamicArrayHelpers::ResolvePointerArray(const void* arrobj, std::vector<DynObjectRef> &objects)
+{
+    assert(arrobj);
+    if (!arrobj)
+        return false;
+
+    objects.clear();
+    const auto &header = CCDynamicArray::GetHeader(arrobj);
+    assert(header.IsPointerArray());
+    if (!header.IsPointerArray())
+        return false;
+
+    const uint32_t *handles = static_cast<const uint32_t*>(arrobj);
+    objects.reserve(header.GetElemCount());
+    for (uint32_t i = 0; i < header.GetElemCount(); ++i)
+    {
+        void *obj;
+        IScriptObject *mgr;
+        ccGetObjectAddressAndManagerFromHandle(handles[i], obj, mgr);
+        objects.push_back(DynObjectRef(handles[i], obj, mgr));
+    }
+    return true;
 }
 
 
