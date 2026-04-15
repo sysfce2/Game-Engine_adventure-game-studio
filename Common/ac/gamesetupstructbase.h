@@ -63,7 +63,7 @@ struct GameSetupStructBase
     int               inv_hot_sprite = 0;
     int               reserved[NUM_INTS_RESERVED] = { 0 };
     Common::String    messages[MAXGLOBALMES] = {};
-    std::unique_ptr<WordsDictionary> dict;
+    std::unique_ptr<AGS::Common::WordsDictionary> dict;
     std::vector<CharacterInfo> chars;
     std::vector<CharacterInfo2> chars2; // extended character fields
 
