@@ -1062,7 +1062,9 @@ import int  StringToInt(const string);
 #define strcat StrCat
 #endif // !STRICT_STRINGS
 
+#ifndef STRICT
 import int  Said (const string text);
+#endif // STRICT
 
 #ifndef STRICT
 // OBSOLETE STUFF
