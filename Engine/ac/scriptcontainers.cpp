@@ -16,7 +16,6 @@
 //
 //=============================================================================
 #include <allegro.h> // get_uformat
-#include "ac/common.h" // quit
 #include "ac/gamestate.h"
 #include "ac/string.h"
 #include "ac/dynobj/cc_dynamicarray.h"
@@ -43,9 +42,9 @@ ScriptDictBase *Dict_CreateImpl(bool sorted, bool case_sensitive)
         if (get_uformat() == U_UTF8)
         {
             if (case_sensitive)
-                dic = new ScriptDictUnicode(LexographicalStrLess(play.GetTextLocaleName().GetCStr()));
+                dic = new ScriptDict();
             else
-                dic = new ScriptDictUnicodeCI(LexographicalStrLessNoCase(play.GetTextLocaleName().GetCStr()));
+                dic = new ScriptDictUtf8CI();
         }
         else
         {
@@ -57,10 +56,20 @@ ScriptDictBase *Dict_CreateImpl(bool sorted, bool case_sensitive)
     }
     else
     {
-        if (case_sensitive)
-            dic = new ScriptHashDict();
+        if (get_uformat() == U_UTF8)
+        {
+            if (case_sensitive)
+                dic = new ScriptHashDict();
+            else
+                dic = new ScriptHashDictUtf8CI();
+        }
         else
-            dic = new ScriptHashDictCI();
+        {
+            if (case_sensitive)
+                dic = new ScriptHashDict();
+            else
+                dic = new ScriptHashDictCI();
+        }
     }
     return dic;
 }
@@ -214,9 +223,9 @@ ScriptSetBase *Set_CreateImpl(bool sorted, bool case_sensitive)
         if (get_uformat() == U_UTF8)
         {
             if (case_sensitive)
-                set = new ScriptSetUnicode(LexographicalStrLess(play.GetTextLocaleName().GetCStr()));
+                set = new ScriptSet();
             else
-                set = new ScriptSetUnicodeCI(LexographicalStrLessNoCase(play.GetTextLocaleName().GetCStr()));
+                set = new ScriptSetUtf8CI();
         }
         else
         {
@@ -228,10 +237,20 @@ ScriptSetBase *Set_CreateImpl(bool sorted, bool case_sensitive)
     }
     else
     {
-        if (case_sensitive)
-            set = new ScriptHashSet();
+        if (get_uformat() == U_UTF8)
+        {
+            if (case_sensitive)
+                set = new ScriptHashSet();
+            else
+                set = new ScriptHashSetUtf8CI();
+        }
         else
-            set = new ScriptHashSetCI();
+        {
+            if (case_sensitive)
+                set = new ScriptHashSet();
+            else
+                set = new ScriptHashSetCI();
+        }
     }
     return set;
 }
