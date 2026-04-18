@@ -308,9 +308,9 @@ void GUIListBox::RemoveItem(int index)
     MarkChanged();
 }
 
-void GUIListBox::SortItems(bool nocase, bool ascending)
+void GUIListBox::SortItems(bool nocase, bool locale_aware, bool ascending)
 {
-    auto str_less = StrUtil::GetStrLessAutoFor(get_uformat() == U_UTF8, nocase, GUI::Context.TextLocaleName.GetCStr());
+    auto str_less = StrUtil::GetStrLessAutoFor(get_uformat() == U_UTF8, nocase, locale_aware ? GUI::Context.TextLocaleName.GetCStr() : nullptr);
     if (ascending)
         std::sort(_items.begin(), _items.end(), str_less);
     else

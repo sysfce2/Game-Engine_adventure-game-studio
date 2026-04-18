@@ -737,6 +737,16 @@ ScriptSaveGameSortStyle ValidateSaveGameSort(const char *apiname, int save_sort)
     return static_cast<ScriptSaveGameSortStyle>(save_sort);
 }
 
+ScriptSortStyle ValidateSortStyle(const char *apiname, int sort_style)
+{
+    if (sort_style < kScNotSorted || sort_style > kScSorted)
+    {
+        debug_script_warn("%s: invalid sort style (%d)", apiname, sort_style);
+        return kScNotSorted;
+    }
+    return static_cast<ScriptSortStyle>(sort_style);
+}
+
 ScriptSortDirection ValidateSortDirection(const char *apiname, int sort_dir)
 {
     if (sort_dir < kScSortNone || sort_dir > kScSortDescending)
@@ -747,14 +757,14 @@ ScriptSortDirection ValidateSortDirection(const char *apiname, int sort_dir)
     return static_cast<ScriptSortDirection>(sort_dir);
 }
 
-ScriptStringComparison ValidateStringComparison(const char* apiname, int case_sensitive)
+ScriptStringComparison ValidateStringComparison(const char* apiname, int compare_style)
 {
-    if (case_sensitive < kScCaseInsensitive || case_sensitive > kScCaseSensitive)
+    if (compare_style < kScCaseInsensitive || compare_style > kScCaseSensitiveLocaleAware)
     {
-        debug_script_warn("%s: invalid case sensitivity (%d)", apiname, case_sensitive);
+        debug_script_warn("%s: invalid case sensitivity (%d)", apiname, compare_style);
         return kScCaseInsensitive;
     }
-    return static_cast<ScriptStringComparison>(case_sensitive);
+    return static_cast<ScriptStringComparison>(compare_style);
 }
 
 bool ValidateSaveSlotRange(const char *api_name, int &min_slot, int &max_slot)

@@ -27,6 +27,7 @@
 #include <set>
 #include <unordered_set>
 #include <string.h>
+#include "ac/runtime_defines.h"
 #include "ac/dynobj/cc_agsdynamicobject.h"
 #include "util/stream.h"
 #include "util/string.h"
@@ -41,8 +42,8 @@ public:
     const char *GetType() override;
     void Unserialize(int index, AGS::Common::Stream *in, size_t data_sz) override;
 
-    virtual bool IsCaseSensitive() const = 0;
-    virtual bool IsSorted() const = 0;
+    virtual ScriptSortStyle GetSortStyle() const = 0;
+    virtual ScriptStringComparison GetStringCompareStyle() const = 0;
 
     virtual bool Add(const char *item) = 0;
     virtual void Clear() = 0;
@@ -63,7 +64,7 @@ private:
     virtual void UnserializeContainer(AGS::Common::Stream *in) = 0;
 };
 
-template <typename TSet, bool is_sorted, bool is_casesensitive>
+template <typename TSet, ScriptSortStyle SortStyle, ScriptStringComparison CompareStyle>
 class ScriptSetBaseImpl : public ScriptSetBase
 {
 public:
@@ -75,8 +76,8 @@ public:
     ScriptSetBaseImpl(TSet &&set)
         : _set(std::move(set)) { }
 
-    bool IsCaseSensitive() const override { return is_casesensitive; }
-    bool IsSorted() const override { return is_sorted; }
+    ScriptSortStyle GetSortStyle() const override { return SortStyle; }
+    ScriptStringComparison GetStringCompareStyle() const override { return CompareStyle; }
 
     bool Add(const char *item) override
     {
@@ -146,39 +147,39 @@ private:
     TSet _set;
 };
 
-template <typename TKey, typename TLess, bool is_casesensitive>
+template <typename TKey, typename TLess, ScriptStringComparison CompareStyle>
 class ScriptSetStdImpl final : public ScriptSetBaseImpl<std::set<TKey, TLess>,
-    true, is_casesensitive>
+    kScSorted, CompareStyle>
 {
 public:
     ScriptSetStdImpl() = default;
     ScriptSetStdImpl(const TLess &less)
-        : ScriptSetBaseImpl<std::set<TKey, TLess>, true, is_casesensitive>
+        : ScriptSetBaseImpl<std::set<TKey, TLess>, kScSorted, CompareStyle>
         (std::move(std::set<TKey, TLess>(less)))
     {
     }
 };
 
-template <typename TKey, typename THash, typename TEqual, bool is_casesensitive>
+template <typename TKey, typename THash, typename TEqual, ScriptStringComparison CompareStyle>
 class ScriptSetStdHashImpl final : public ScriptSetBaseImpl<std::unordered_set<TKey, THash, TEqual>,
-    false, is_casesensitive>
+    kScNotSorted, CompareStyle>
 {
 public:
     ScriptSetStdHashImpl() = default;
     ScriptSetStdHashImpl(const THash &hash, const TEqual &equal)
-        : ScriptSetBaseImpl<std::unordered_set<TKey, THash, TEqual>, false, is_casesensitive>
+        : ScriptSetBaseImpl<std::unordered_set<TKey, THash, TEqual>, kScNotSorted, CompareStyle>
         (std::move(std::unordered_set<TKey, THash, TEqual>(0, hash, equal)))
     {
     }
 };
 
-typedef ScriptSetStdImpl< String, std::less<String>, true > ScriptSet;
-typedef ScriptSetStdImpl< String, StrLessNoCase, false > ScriptSetCI;
-typedef ScriptSetStdImpl< String, StrLessUtf8NoCase, false > ScriptSetUtf8CI;
-typedef ScriptSetStdImpl< String, LexographicalStrLess, true > ScriptSetUnicode;
-typedef ScriptSetStdImpl< String, LexographicalStrLessNoCase, false > ScriptSetUnicodeCI;
-typedef ScriptSetStdHashImpl< String, std::hash<String>, std::equal_to<String>, true > ScriptHashSet;
-typedef ScriptSetStdHashImpl< String, HashStrNoCase, StrEqNoCase, false > ScriptHashSetCI;
-typedef ScriptSetStdHashImpl< String, HashStrUtf8NoCase, StrEqUtf8NoCase, false > ScriptHashSetUtf8CI;
+typedef ScriptSetStdImpl< String, std::less<String>, kScCaseSensitive > ScriptSet;
+typedef ScriptSetStdImpl< String, StrLessNoCase, kScCaseInsensitive > ScriptSetCI;
+typedef ScriptSetStdImpl< String, StrLessUtf8NoCase, kScCaseInsensitive > ScriptSetUtf8CI;
+typedef ScriptSetStdImpl< String, LexographicalStrLess, kScCaseSensitiveLocaleAware > ScriptSetLocaleAware;
+typedef ScriptSetStdImpl< String, LexographicalStrLessNoCase, kScCaseInsensitiveLocaleAware > ScriptSetLocaleAwareCI;
+typedef ScriptSetStdHashImpl< String, std::hash<String>, std::equal_to<String>, kScCaseSensitive > ScriptHashSet;
+typedef ScriptSetStdHashImpl< String, HashStrNoCase, StrEqNoCase, kScCaseInsensitive > ScriptHashSetCI;
+typedef ScriptSetStdHashImpl< String, HashStrUtf8NoCase, StrEqUtf8NoCase, kScCaseInsensitive > ScriptHashSetUtf8CI;
 
 #endif // __AC_SCRIPTSET_H

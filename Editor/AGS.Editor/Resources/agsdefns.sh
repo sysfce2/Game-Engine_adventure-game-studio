@@ -482,8 +482,16 @@ enum CharacterDirection {
 #ifdef SCRIPT_API_v350
 enum StringCompareStyle
 {
+  // NOTE: these constants values are chosen to be a combination of flags:
+  // - CaseSensitive = 0x1,
+  // - LocaleAware = 0x2
+
   eCaseInsensitive = 0,
-  eCaseSensitive = 1
+  eCaseSensitive = 1,
+#ifdef SCRIPT_API_v363
+  eCaseInsensitiveLocaleAware = 2,
+  eCaseSensitiveLocaleAware = 3,
+#endif // SCRIPT_API_v363
 };
 
 enum SortStyle

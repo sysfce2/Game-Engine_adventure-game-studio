@@ -243,38 +243,19 @@ struct FileEntryEqByNameCI
     }
 };
 
-struct FileEntryEqByNameLexographicalCI
+struct FileEntryEqByNameAuto
 {
-    FileEntryEqByNameLexographicalCI()
-        : _loc(std::locale())
-    {
-    }
-
-    FileEntryEqByNameLexographicalCI(const char *locale_name)
-    {
-        try
-        {
-            if (locale_name && *locale_name)
-                _loc = std::locale(locale_name);
-            else
-                _loc = std::locale();
-        }
-        catch (const std::runtime_error&)
-        {
-            _loc = std::locale();
-        }
-    }
+    FileEntryEqByNameAuto(std::unique_ptr<IStrCmp> &&cmp_impl)
+        : _cmpImpl(std::move(cmp_impl)) {}
 
     bool operator()(const FileEntry &fe1, const FileEntry &fe2) const
     {
-        const String f1lower = fe1.Name.LowerUTF8();
-        const String f2lower = fe2.Name.LowerUTF8();
-        return std::use_facet<std::collate<char>>(_loc).
-            compare(f1lower.GetCStr(), f1lower.GetCStr() + f1lower.GetLength(), f2lower.GetCStr(), f2lower.GetCStr() + f2lower.GetLength()) == 0;
+        return _cmpImpl->operator()(fe1.Name, fe2.Name) == 0;
     }
 
 private:
-    std::locale _loc;
+    // It's shared ptr, because STL requires a copy constructor for predicates
+    std::shared_ptr<IStrCmp> _cmpImpl;
 };
 
 struct FileEntryCmpByName
@@ -294,38 +275,19 @@ struct FileEntryCmpByNameCI
     }
 };
 
-struct FileEntryCmpByNameLexographicalCI
+struct FileEntryCmpByNameAuto
 {
-    FileEntryCmpByNameLexographicalCI()
-        : _loc(std::locale())
-    {
-    }
-
-    FileEntryCmpByNameLexographicalCI(const char *locale_name)
-    {
-        try
-        {
-            if (locale_name && *locale_name)
-                _loc = std::locale(locale_name);
-            else
-                _loc = std::locale();
-        }
-        catch (const std::runtime_error&)
-        {
-            _loc = std::locale();
-        }
-    }
+    FileEntryCmpByNameAuto(std::unique_ptr<IStrCmp> &&cmp_impl)
+        : _cmpImpl(std::move(cmp_impl)) {}
 
     bool operator()(const FileEntry &fe1, const FileEntry &fe2) const
     {
-        const String f1lower = fe1.Name.LowerUTF8();
-        const String f2lower = fe2.Name.LowerUTF8();
-        return std::use_facet<std::collate<char>>(_loc).
-            compare(f1lower.GetCStr(), f1lower.GetCStr() + f1lower.GetLength(), f2lower.GetCStr(), f2lower.GetCStr() + f2lower.GetLength()) < 0;
+        return _cmpImpl->operator()(fe1.Name, fe2.Name) < 0;
     }
 
 private:
-    std::locale _loc;
+    // It's shared ptr, because STL requires a copy constructor for predicates
+    std::shared_ptr<IStrCmp> _cmpImpl;
 };
 
 struct FileEntryCmpByTime

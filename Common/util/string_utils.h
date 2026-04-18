@@ -51,11 +51,17 @@ namespace StrUtil
     inline int      LexographicalCompareNoCase(const char* cstr1, const char* cstr2, const char* locale_name = "")
                         { return LexographicalCompareNoCase(String::Wrapper(cstr1), String::Wrapper(cstr2), locale_name); }
 
-    // Constructs a automatic string 'less' predicate purposed for the certain case described by parameters
-    std::unique_ptr<StrLessAutoImpl> GetStrLessAutoImplFor(bool unicode, bool nocase, const char *locale_name = "");
-    inline StrLessAuto GetStrLessAutoFor(bool unicode, bool nocase, const char *locale_name = "")
+    // Constructs a string 'compare' predicate purposed for the certain case described by parameters
+    std::unique_ptr<IStrCmp> GetStrCmpImplFor(bool unicode, bool nocase, const char *locale_name = nullptr);
+    // Constructs a string 'equal' predicate purposed for the certain case described by parameters
+    inline StrEqAuto GetStrEqAutoFor(bool unicode, bool nocase, const char *locale_name = nullptr)
     {
-        return StrLessAuto(GetStrLessAutoImplFor(unicode, nocase, locale_name));
+        return StrEqAuto(GetStrCmpImplFor(unicode, nocase, locale_name));
+    }
+    // Constructs a string 'less' predicate purposed for the certain case described by parameters
+    inline StrLessAuto GetStrLessAutoFor(bool unicode, bool nocase, const char *locale_name = nullptr)
+    {
+        return StrLessAuto(GetStrCmpImplFor(unicode, nocase, locale_name));
     }
 
     // Convert integer to string, by printing its value

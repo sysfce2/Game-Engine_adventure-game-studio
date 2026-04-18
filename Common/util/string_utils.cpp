@@ -46,10 +46,12 @@ int StrUtil::LexographicalCompareNoCase(const String &s1, const String &s2, cons
 {
     try
     {
-        const auto loc = (locale_name && *locale_name) ? std::locale(locale_name) : std::locale();
-        const auto &fac_c = std::use_facet<std::collate<char>>(loc);
+        // TODO: find out if there's a way to avoid allocating lowercase strings,
+        // and do collation over original strings instead (does C++ stdlib support that?)
         const String s1lower = s1.LowerUTF8();
         const String s2lower = s2.LowerUTF8();
+        const auto loc = (locale_name && *locale_name) ? std::locale(locale_name) : std::locale();
+        const auto &fac_c = std::use_facet<std::collate<char>>(loc);
         return fac_c.compare(s1lower.GetCStr(), s1lower.GetCStr() + s1lower.GetLength(), s2lower.GetCStr(), s2lower.GetCStr() + s2lower.GetLength());
     }
     catch (const std::runtime_error&)
@@ -58,21 +60,27 @@ int StrUtil::LexographicalCompareNoCase(const String &s1, const String &s2, cons
     }
 }
 
-std::unique_ptr<StrLessAutoImpl> StrUtil::GetStrLessAutoImplFor(bool unicode, bool nocase, const char *locale_name)
+std::unique_ptr<IStrCmp> StrUtil::GetStrCmpImplFor(bool unicode, bool nocase, const char *locale_name)
 {
+    // NOTE: locale_aware only makes sense in unicode mode
+    const bool locale_aware = locale_name != nullptr;
     if (unicode)
     {
         if (nocase)
-            return std::unique_ptr<StrLessAutoImpl>(new StrLessAutoLexographicalNoCase(locale_name));
+            return std::unique_ptr<IStrCmp>(locale_aware ?
+                (IStrCmp*)new StrCmpLexographicalNoCase(locale_name)
+                : new StrCmpUtf8NoCase());
         else
-            return std::unique_ptr<StrLessAutoImpl>(new StrLessAutoLexographical(locale_name));
+            return std::unique_ptr<IStrCmp>(locale_aware ?
+                (IStrCmp*)new StrCmpLexographical(locale_name)
+                : new StrCmpDirect());
     }
     else
     {
         if (nocase)
-            return std::unique_ptr<StrLessAutoImpl>(new StrLessAutoNoCase());
+            return std::unique_ptr<IStrCmp>(new StrCmpNoCase());
         else
-            return std::unique_ptr<StrLessAutoImpl>(new StrLessAutoDirect());
+            return std::unique_ptr<IStrCmp>(new StrCmpDirect());
     }
 }
 

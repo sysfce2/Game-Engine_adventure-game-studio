@@ -16,6 +16,7 @@
 //
 //=============================================================================
 #include <allegro.h> // get_uformat
+#include "ac/game.h"
 #include "ac/gamestate.h"
 #include "ac/string.h"
 #include "ac/dynobj/cc_dynamicarray.h"
@@ -34,17 +35,28 @@
 //
 //=============================================================================
 
-ScriptDictBase *Dict_CreateImpl(bool sorted, bool case_sensitive)
+// NOTE: locale_aware only makes sense in unicode mode, and it only makes
+// a difference for sorted containers, because the unsorted containers
+// calculate hash, which does not care about order of letters in alphabet.
+ScriptDictBase *Dict_CreateImpl(ScriptSortStyle sort_style, ScriptStringComparison compare_style)
 {
+    const bool sorted = sort_style == kScSorted;
+    const bool case_sensitive = (compare_style & kScCaseSensitiveFlag) != 0;
+    const bool locale_aware = (compare_style & kScLocaleAwareFlag) != 0;
+
     ScriptDictBase *dic;
     if (sorted)
     {
         if (get_uformat() == U_UTF8)
         {
             if (case_sensitive)
-                dic = new ScriptDict();
+                dic = locale_aware ?
+                    (ScriptDictBase*)new ScriptDictLocaleAware(LexographicalStrLess(play.GetTextLocaleName().GetCStr()))
+                    : new ScriptDict();
             else
-                dic = new ScriptDictUtf8CI();
+                dic = locale_aware ?
+                    (ScriptDictBase*)new ScriptDictLocaleAwareCI(LexographicalStrLessNoCase(play.GetTextLocaleName().GetCStr()))
+                    : new ScriptDictUtf8CI();
         }
         else
         {
@@ -74,9 +86,9 @@ ScriptDictBase *Dict_CreateImpl(bool sorted, bool case_sensitive)
     return dic;
 }
 
-ScriptDictBase *Dict_Create(bool sorted, bool case_sensitive)
+ScriptDictBase *Dict_Create(int sort_style, int compare_style)
 {
-    ScriptDictBase *dic = Dict_CreateImpl(sorted, case_sensitive);
+    ScriptDictBase *dic = Dict_CreateImpl(ValidateSortStyle("Dictionary.Create", sort_style), ValidateStringComparison("Dictionary.Create", compare_style));
     ccRegisterManagedObject(dic, dic);
     return dic;
 }
@@ -86,9 +98,9 @@ ScriptDictBase *Dict_Unserialize(int index, AGS::Common::Stream *in, size_t data
 {
     if (data_sz < sizeof(int32_t) * 2)
         quit("Dict_Unserialize: not enough data."); // TODO: don't quit, return error
-    const int sorted = in->ReadInt32();
-    const int cs = in->ReadInt32();
-    ScriptDictBase *dic = Dict_CreateImpl(sorted != 0, cs != 0);
+    const int sort_style = in->ReadInt32();
+    const int compare_style = in->ReadInt32();
+    ScriptDictBase *dic = Dict_CreateImpl(static_cast<ScriptSortStyle>(sort_style), static_cast<ScriptStringComparison>(compare_style));
     dic->Unserialize(index, in, data_sz - sizeof(int32_t) * 2);
     return dic;
 }
@@ -121,12 +133,12 @@ bool Dict_Set(ScriptDictBase *dic, const char *key, const char *value)
 
 int Dict_GetCompareStyle(ScriptDictBase *dic)
 {
-    return dic->IsCaseSensitive() ? 1 : 0;
+    return dic->GetStringCompareStyle();
 }
 
 int Dict_GetSortStyle(ScriptDictBase *dic)
 {
-    return dic->IsSorted() ? 1 : 0;
+    return dic->GetSortStyle();
 }
 
 int Dict_GetItemCount(ScriptDictBase *dic)
@@ -156,7 +168,7 @@ void *Dict_GetValuesAsArray(ScriptDictBase *dic)
 
 RuntimeScriptValue Sc_Dict_Create(const RuntimeScriptValue *params, int32_t param_count)
 {
-    API_SCALL_OBJAUTO_PBOOL2(ScriptDictBase, Dict_Create);
+    API_SCALL_OBJAUTO_PINT2(ScriptDictBase, Dict_Create);
 }
 
 RuntimeScriptValue Sc_Dict_Clear(void *self, const RuntimeScriptValue *params, int32_t param_count)
@@ -215,17 +227,28 @@ RuntimeScriptValue Sc_Dict_GetValuesAsArray(void *self, const RuntimeScriptValue
 //
 //=============================================================================
 
-ScriptSetBase *Set_CreateImpl(bool sorted, bool case_sensitive)
+// NOTE: locale_aware only makes sense in unicode mode, and it only makes
+// a difference for sorted containers, because the unsorted containers
+// calculate hash, which does not care about order of letters in alphabet.
+ScriptSetBase *Set_CreateImpl(ScriptSortStyle sort_style, ScriptStringComparison compare_style)
 {
+    const bool sorted = sort_style == kScSorted;
+    const bool case_sensitive = (compare_style & kScCaseSensitiveFlag) != 0;
+    const bool locale_aware = (compare_style & kScLocaleAwareFlag) != 0;
+
     ScriptSetBase *set;
     if (sorted)
     {
         if (get_uformat() == U_UTF8)
         {
             if (case_sensitive)
-                set = new ScriptSet();
+                set = locale_aware ?
+                    (ScriptSetBase*)new ScriptSetLocaleAware(LexographicalStrLess(play.GetTextLocaleName().GetCStr()))
+                    : new ScriptSet();
             else
-                set = new ScriptSetUtf8CI();
+                set = locale_aware ?
+                    (ScriptSetBase*)new ScriptSetLocaleAwareCI(LexographicalStrLessNoCase(play.GetTextLocaleName().GetCStr()))
+                    : new ScriptSetUtf8CI();
         }
         else
         {
@@ -255,9 +278,9 @@ ScriptSetBase *Set_CreateImpl(bool sorted, bool case_sensitive)
     return set;
 }
 
-ScriptSetBase *Set_Create(bool sorted, bool case_sensitive)
+ScriptSetBase *Set_Create(int sort_style, int compare_style)
 {
-    ScriptSetBase *set = Set_CreateImpl(sorted, case_sensitive);
+    ScriptSetBase *set = Set_CreateImpl(ValidateSortStyle("Set.Create", sort_style), ValidateStringComparison("Set.Create", compare_style));
     ccRegisterManagedObject(set, set);
     return set;
 }
@@ -267,9 +290,9 @@ ScriptSetBase *Set_Unserialize(int index, AGS::Common::Stream *in, size_t data_s
 {
     if (data_sz < sizeof(int32_t) * 2)
         quit("Set_Unserialize: not enough data."); // TODO: don't quit, return error
-    const int sorted = in->ReadInt32();
-    const int cs = in->ReadInt32();
-    ScriptSetBase *set = Set_CreateImpl(sorted != 0, cs != 0);
+    const int sort_style = in->ReadInt32();
+    const int compare_style = in->ReadInt32();
+    ScriptSetBase *set = Set_CreateImpl(static_cast<ScriptSortStyle>(sort_style), static_cast<ScriptStringComparison>(compare_style));
     set->Unserialize(index, in, data_sz - sizeof(int32_t) * 2);
     return set;
 }
@@ -296,12 +319,12 @@ bool Set_Remove(ScriptSetBase *set, const char *item)
 
 int Set_GetCompareStyle(ScriptSetBase *set)
 {
-    return set->IsCaseSensitive() ? 1 : 0;
+    return set->GetStringCompareStyle();
 }
 
 int Set_GetSortStyle(ScriptSetBase *set)
 {
-    return set->IsSorted() ? 1 : 0;
+    return set->GetSortStyle();
 }
 
 int Set_GetItemCount(ScriptSetBase *set)
@@ -321,7 +344,7 @@ void *Set_GetItemsAsArray(ScriptSetBase *set)
 
 RuntimeScriptValue Sc_Set_Create(const RuntimeScriptValue *params, int32_t param_count)
 {
-    API_SCALL_OBJAUTO_PBOOL2(ScriptSetBase, Set_Create);
+    API_SCALL_OBJAUTO_PINT2(ScriptSetBase, Set_Create);
 }
 
 RuntimeScriptValue Sc_Set_Add(void *self, const RuntimeScriptValue *params, int32_t param_count)
