@@ -530,3 +530,94 @@ jobs:
           name: pdb-archive
           include-hidden-files: true
           path: AGS-*-pdb.zip
+
+
+  windows-packaging:
+    name: Windows Packaging
+    runs-on: windows-latest
+    timeout-minutes: 60
+    needs:
+      - windows-msvc-editor
+      - windows-msvc-engine
+    env:
+      TEMPLATES_REPOSITORY: adventuregamestudio/ags-templates
+      AGS_SDL_LIB: C:\Lib\SDL2\lib\x86
+    steps:
+      - uses: actions/checkout@v6
+
+
+      - name: Cache Windows build dependencies
+        id: cache-win-deps
+        uses: actions/cache@v5
+        with:
+          path: C:\Lib
+          key: win-deps-${{ hashFiles('Windows/setup_ags_build_deps.bat') }}
+
+      - name: Setup msbuild if we need to build SDL_sound (For WinDevDependenciesVS)
+        uses: microsoft/setup-msbuild@v3
+        if: steps.cache-win-deps.outputs.cache-hit != 'true'
+
+      - name: Install Windows build dependencies (For WinDevDependenciesVS)
+        if: steps.cache-win-deps.outputs.cache-hit != 'true'
+        shell: cmd
+        run: Windows\setup_ags_build_deps.bat
+
+      - name: Download Editor binaries
+        uses: actions/download-artifact@v8
+        with:
+          name: windows-editor-binaries
+          path: Windows\Installer\Source\Editor
+
+      - name: Download Engine x86 binary
+        uses: actions/download-artifact@v8
+        with:
+          name: windows-engine-binaries-x86
+          path: Windows\Installer\Source\Engine_tmp
+
+      - name: Copy acwin.exe and SDL2.dll
+        shell: cmd
+        run: |
+          mkdir Windows\Installer\Source\Engine
+          copy Windows\Installer\Source\Engine_tmp\Release\acwin.exe Windows\Installer\Source\Engine\acwin.exe
+          copy %AGS_SDL_LIB%\SDL2.dll Windows\Installer\Source\Engine\SDL2.dll
+
+      - name: Download AGS manual
+        shell: cmd
+        run: |
+          mkdir Windows\Installer\Source\Docs
+          cd Windows\Installer\Source\Docs
+          curl -fLOJ https://github.com/adventuregamestudio/ags-manual/releases/latest/download/ags-help.chm
+
+      - name: Download AGS templates
+        shell: cmd
+        run: |
+          mkdir Windows\Installer\Source\Templates
+          curl -fLSs https://github.com/%TEMPLATES_REPOSITORY%/tarball/master | tar -f - -xvzC Windows\Installer\Source\Templates --strip-components 2
+
+      - name: Build release archive
+        shell: cmd
+        run: |
+          move Windows\Installer\Source\Docs\* Windows\Installer\Source\Editor\
+          move Windows\Installer\Source\Engine\* Windows\Installer\Source\Editor\
+          move Windows\Installer\Source\Licenses Windows\Installer\Source\Editor\
+          move Windows\Installer\Source\Templates Windows\Installer\Source\Editor\
+          move Windows\Installer\Source\URLs Windows\Installer\Source\Editor\
+          tar -f AGS-Package.zip -acv --strip-components 4 Windows\Installer\Source\Editor
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-release-archive
+          path: AGS-*.zip
+
+      - name: Build WinDevDependenciesVS archive
+        shell: cmd
+        run: |
+          pushd "C:\Lib\SDL_sound" && del /Q /S build_x86\* && rd /Q /S build_x86 && del /Q /S build_x64\* && rd /Q /S build_x64 && popd
+          tar -f WinDevDependenciesVS.zip -acv --strip-components 2 C:\Lib
+
+      - name: Upload WinDevDependenciesVS
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-dev-dependencies
+          path: WinDevDependenciesVS.zip
