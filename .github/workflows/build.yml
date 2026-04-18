@@ -380,3 +380,111 @@ jobs:
           name: windows-engine-binaries-x64
           include-hidden-files: true
           path: Solutions/.build/*/*
+
+  windows-msvc-editor:
+    name: Windows MSVC Editor
+    runs-on: windows-latest
+    timeout-minutes: 40
+    env:
+      AGS_LIBOGG_LIB:        C:\Lib\Xiph\x86
+      AGS_LIBTHEORA_LIB:     C:\Lib\Xiph\x86
+      AGS_LIBVORBIS_LIB:     C:\Lib\Xiph\x86
+      AGS_SDL_INCLUDE:       C:\Lib\SDL2\include
+      AGS_SDL_LIB:           C:\Lib\SDL2\lib\x86
+      AGS_SDL_SOUND_INCLUDE: C:\Lib\SDL_sound\src
+      AGS_SDL_SOUND_LIB:     C:\Lib\SDL_sound\lib\x86
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: microsoft/setup-msbuild@v3
+
+      - name: Cache Windows build dependencies
+        id: cache-win-deps
+        uses: actions/cache@v5
+        with:
+          path: C:\Lib
+          key: win-deps-${{ hashFiles('Windows/setup_ags_build_deps.bat') }}
+
+      - name: Install Windows build dependencies
+        if: steps.cache-win-deps.outputs.cache-hit != 'true'
+        shell: cmd
+        run: Windows\setup_ags_build_deps.bat
+
+      - name: Copy irrKlang DLLs to Editor\References
+        shell: pwsh
+        run: |
+          Copy-Item C:\Lib\irrKlang\x86\*.dll Editor\References\
+          New-Item -ItemType Directory -Path Editor\References\x64 -Force
+          Copy-Item C:\Lib\irrKlang\x64\*.dll Editor\References\x64
+      
+      - name: Cache NuGet packages
+        id: cache-nuget
+        uses: actions/cache@v5
+        with:
+          path: Solutions\packages
+          key: nuget-${{ hashFiles('Editor/AGS.Editor/packages.config', 'Editor/AGS.Types/packages.config', 'Editor/AGS.Editor.Tests/packages.config') }}
+
+      - name: Restore NuGet packages
+        if: steps.cache-nuget.outputs.cache-hit != 'true'
+        shell: cmd
+        run: nuget restore Solutions\AGS.Editor.Full.sln
+
+      - name: Build Editor (Debug)
+        shell: cmd
+        run: |
+          cd Solutions
+          msbuild AGS.Editor.Full.sln /m /p:MultiProcessorCompilation=true /p:PlatformToolset=v142 /p:Configuration=Debug /p:Platform=Win32 /maxcpucount /nologo
+
+      - name: Run NUnit tests (Debug)
+        shell: cmd
+        run: |
+          curl -fLOJ https://github.com/nunit/nunit-transforms/raw/master/nunit3-junit/nunit3-junit.xslt
+          pushd Solutions\packages\NUnit.ConsoleRunner.3.*
+          set RUNNER="%CD%\tools\nunit3-console.exe"
+          popd
+          cmd /v:on /c "!RUNNER! Editor\AGS.Editor.Tests\bin\Debug\AGS.Editor.Tests.dll --result=TestResult-junit.xml;transform=nunit3-junit.xslt"
+
+      - name: Build Editor (Release)
+        shell: cmd
+        run: |
+          cd Solutions
+          msbuild AGS.Editor.Full.sln /m /p:MultiProcessorCompilation=true /p:PlatformToolset=v142 /p:Configuration=Release /p:Platform=Win32 /maxcpucount /nologo
+
+      - name: Run NUnit tests (Release)
+        shell: cmd
+        run: |
+          curl -fLOJ https://github.com/nunit/nunit-transforms/raw/master/nunit3-junit/nunit3-junit.xslt
+          pushd Solutions\packages\NUnit.ConsoleRunner.3.*
+          set RUNNER="%CD%\tools\nunit3-console.exe"
+          popd
+          cmd /v:on /c "!RUNNER! Editor\AGS.Editor.Tests\bin\Release\AGS.Editor.Tests.dll --result=TestResult-junit.xml;transform=nunit3-junit.xslt"
+        
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: editor-test-results
+          include-hidden-files: true
+          path: TestResult-junit.xml
+
+      - name: Upload Editor PDBs
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-editor-pdb
+          include-hidden-files: true
+          path: |
+            Solutions/.build/*/*.pdb
+            Editor/AGS.Native/*/AGS.Native.pdb
+
+      - name: Delete Editor PDBs and XML docs
+        shell: cmd
+        run: |
+          cd Solutions\.build
+          del /s /q *.pdb *.xml
+
+      - name: Upload Editor Release binaries
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-editor-binaries
+          include-hidden-files: true
+          path: Solutions/.build/Release/*
