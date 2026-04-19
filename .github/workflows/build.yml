@@ -133,6 +133,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Install bsdtar
+        run: |
+          sudo apt-get install -y libarchive-tools
+
       - uses: mymindstorm/setup-emsdk@v16
         with:
           version: 3.1.74
@@ -151,14 +155,23 @@ jobs:
       - name: Build
         run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}} --parallel 4
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v7
+      - name: Package Emscripten build
+        run: |
+          tmp=$(mktemp -d)
+          version=$(awk -F'[ "]+' '$1=="#define" && $2=="ACI_VERSION_STR" { print $3; exit }' Common/ac/def_version.h)
+          pushd Emscripten
+          cp my_game_files.js $tmp/
+          pushd "${{github.workspace}}/build"
+          mv ags.js ags.wasm ags.html $tmp/
+          popd && popd
+          mv $tmp/ags.html $tmp/index.html
+          bsdtar -f ags_${version}_web.tar.gz -cvzC $tmp \
+            index.html ags.js ags.wasm my_game_files.js
+
+      - uses: actions/upload-artifact@v7
         with:
-          name: emscripten-binaries
-          path: |
-            ${{github.workspace}}/build/ags.html
-            ${{github.workspace}}/build/ags.wasm
-            ${{github.workspace}}/build/ags.js
+          name: emscripten-ags-package
+          path: ags_*_web.tar.gz
 
   build-android:
     name: Android
