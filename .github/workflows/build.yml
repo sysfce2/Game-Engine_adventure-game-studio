@@ -27,7 +27,6 @@ jobs:
         - { name: Ubuntu-x86_64,        os: ubuntu-latest,    sys: Ubuntu,  gfx: OGL,  artifact: 'ags-linux-x86_64', shell: sh,          runbin: "./ags",      bindir: "",        cmakecmd: "cmake" }
         - { name: Ubuntu-Arm64,         os: ubuntu-22.04-arm, sys: Ubuntu,  gfx: OGL,  artifact: 'ags-linux-Arm64',  shell: sh,          runbin: "./ags",      bindir: "",        cmakecmd: "cmake" }
         - { name: macOS,                os: macos-latest,     sys: macOS,   gfx: OGL,  artifact: 'ags-macos',        shell: sh,          runbin: "./ags",      bindir: "",        cmakecmd: "cmake" }
-        - { name: Emscripten,           os: ubuntu-latest,    sys: Web,     gfx: OGL,  artifact: 'ags-emscripten',   shell: sh,          runbin: "",           bindir: ""       , cmakecmd: "emcmake cmake" }
 
     steps:
     - name: Set up MSYS2
@@ -66,11 +65,6 @@ jobs:
         path: ${{github.workspace}}/build/_deps
         key: fetchcontent-${{ runner.os }}-${{ matrix.platform.name }}-${{ hashFiles('CMakeLists.txt', 'CMake/Fetch*.cmake') }}
 
-    - uses: mymindstorm/setup-emsdk@v16
-      if: ${{ matrix.platform.name == 'Emscripten' }}
-      with:
-        version: 3.1.74
-
     - name: Configure CMake
       run: |
         cmake --version
@@ -80,7 +74,6 @@ jobs:
       run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}} --parallel 4
 
     - name: Test
-      if: ${{ matrix.platform.name != 'Emscripten' }}
       working-directory: ${{github.workspace}}/build
       run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
 
@@ -92,9 +85,6 @@ jobs:
           ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ags.exe
           ${{github.workspace}}/build/ags
           ${{github.workspace}}/build/ags.exe
-          ${{github.workspace}}/build/ags.html
-          ${{github.workspace}}/build/ags.wasm
-          ${{github.workspace}}/build/ags.js
 
     - name: Download auto-test
       working-directory: ${{github.workspace}}/build/${{matrix.platform.bindir}}
@@ -116,30 +106,59 @@ jobs:
         rm auto-test.zip
 
     - name: Run auto-test (Hardware GFX)
-      if: ${{ matrix.platform.name != 'Emscripten' }}
       working-directory: ${{github.workspace}}/build/${{matrix.platform.bindir}}
       run: |
         ${{matrix.platform.runbin}} --gfxdriver ${{matrix.platform.gfx}} --no-message-box --log-stdout=script:info,main:info --user-data-dir . ${{env.AUTO_TEST_ASSET_BASENAME}}.ags
         mv agstest.tap agstest_hardware.tap
 
     - name: Check auto-test (Hardware GFX) # we are using tap.py so that the pipeline fails if a test fails
-      if: ${{ matrix.platform.name != 'Emscripten' }}
       working-directory: ${{github.workspace}}/build/${{matrix.platform.bindir}}
       run: |
         tappy agstest_hardware.tap
 
     - name: Run auto-test (Software GFX)
-      if: ${{ matrix.platform.name != 'Emscripten' }}
       working-directory: ${{github.workspace}}/build/${{matrix.platform.bindir}}
       run: |
         ${{matrix.platform.runbin}} --gfxdriver Software --no-message-box --log-stdout=script:info,main:info --user-data-dir . ${{env.AUTO_TEST_ASSET_BASENAME}}.ags
         mv agstest.tap agstest_software.tap
 
     - name: Check auto-test (Software GFX) # we are using tap.py so that the pipeline fails if a test fails
-      if: ${{ matrix.platform.name != 'Emscripten' }}
       working-directory: ${{github.workspace}}/build/${{matrix.platform.bindir}}
       run: |
         tappy agstest_software.tap
+
+  build-emscripten:
+    name: Emscripten
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: mymindstorm/setup-emsdk@v16
+        with:
+          version: 3.1.74
+
+      - name: Cache CMake FetchContent dependencies
+        uses: actions/cache@v5
+        with:
+          path: ${{github.workspace}}/build/_deps
+          key: fetchcontent-${{ runner.os }}-Emscripten-${{ hashFiles('CMakeLists.txt', 'CMake/Fetch*.cmake') }}
+
+      - name: Configure CMake
+        run: |
+          cmake --version
+          emcmake cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DAGS_BUILD_TOOLS=0 -DAGS_TESTS=0 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+      - name: Build
+        run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}} --parallel 4
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: emscripten-binaries
+          path: |
+            ${{github.workspace}}/build/ags.html
+            ${{github.workspace}}/build/ags.wasm
+            ${{github.workspace}}/build/ags.js
 
   build-android:
     name: Android
