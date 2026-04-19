@@ -638,10 +638,10 @@ jobs:
           move Windows\Installer\Source\URLs Windows\Installer\Source\Editor\
           tar -f AGS-Package.zip -acv --strip-components 4 Windows\Installer\Source\Editor
 
-      - name: Upload release archive
+      - name: Upload archive
         uses: actions/upload-artifact@v7
         with:
-          name: windows-release-archive
+          name: ags-archive
           path: AGS-*.zip
 
       - name: Build WinDevDependenciesVS archive
