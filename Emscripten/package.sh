@@ -7,14 +7,24 @@ set -e
 #    This script takes one argument, which is the directory where the build
 # artifacts from the web engine are expected to be.
 
-BUILD_DIR="${1:-build-release}"
+BUILD_DIR="${1:-build}"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 ROOT_DIR="${SCRIPT_DIR}/.."
 TAR_CMD="bsdtar"
 command -v bsdtar >/dev/null 2>&1 || { TAR_CMD="tar" ; }
 
 if [ ! -d "${BUILD_DIR}" ]; then
-  echo "Erro: build directory '${BUILD_DIR}' does not exist."
+  echo "Error: build directory '${BUILD_DIR}' does not exist."
+  exit 1
+fi
+
+if [ ! -f "${BUILD_DIR}/ags.wasm" ]; then
+  echo "Error: can't find ags.wasm in '${BUILD_DIR}'."
+  exit 1
+fi
+
+if [ ! -f "${BUILD_DIR}/ags.js" ]; then
+  echo "Error: can't find ags.js in '${BUILD_DIR}."
   exit 1
 fi
 
@@ -39,4 +49,6 @@ ${TAR_CMD} -f "${ARCHIVE_NAME}" -cvzC "${TMP_DIR}" \
 
 rm -rf "${TMP_DIR}"
 
-echo "Packaged web build as: ${ARCHIVE_NAME}"
+mv "${ARCHIVE_NAME}" "${ROOT_DIR}/${ARCHIVE_NAME}"
+
+echo "Packaged web build as: ${ARCHIVE_NAME} at ${ROOT_DIR}"
