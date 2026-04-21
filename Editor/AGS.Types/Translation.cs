@@ -15,12 +15,16 @@ namespace AGS.Types
         private const string NORMAL_FONT_TAG = "NormalFont";
         private const string SPEECH_FONT_TAG = "SpeechFont";
         private const string TEXT_DIRECTION_TAG = "TextDirection";
+        private const string AUTO_PARSERSAID_TAG = "AutoTranslateParserSaid";
         private const string ENCODING_TAG = "Encoding";
         private const string LANGUAGE_TAG = "Language";
         private const string FONT_OVERRIDE_TAG = "Font";
         private const string TAG_DEFAULT = "DEFAULT";
         private const string TAG_DIRECTION_LEFT = "LEFT";
         private const string TAG_DIRECTION_RIGHT = "RIGHT";
+        private const string TAG_ON = "ON";
+        private const string TAG_OFF = "OFF";
+        private const string ANNOTATE_PARSERWORD = "PARSERWORD";
 
         private string _name;
         private string _fileName;
@@ -28,11 +32,13 @@ namespace AGS.Types
         private int? _normalFont;
         private int? _speechFont;
         private bool? _rightToLeftText;
+        private bool _autoTranslateParserSaid = false;
         private string _encodingHint;
         private Encoding _encoding;
         private string _language;
         private Dictionary<int, Font> _fontOverrides = new Dictionary<int, Font>();
         private Dictionary<string, string> _translatedLines;
+        private Dictionary<string, TranslationEntryOptions> _entryOptions;
 
         public Translation(string name)
         {
@@ -67,6 +73,12 @@ namespace AGS.Types
             set { _translatedLines = value; }
         }
 
+        public Dictionary<string, TranslationEntryOptions> TranslatedEntryOptions
+        {
+            get { return _entryOptions; }
+            set { _entryOptions = value; }
+        }
+
         public int? NormalFont
         {
             get { return _normalFont; }
@@ -80,6 +92,11 @@ namespace AGS.Types
         public bool? RightToLeftText
         {
             get { return _rightToLeftText; }
+        }
+
+        public bool AutoTranslateParserSaid
+        {
+            get { return _autoTranslateParserSaid; }
         }
 
         public string EncodingHint
@@ -177,6 +194,8 @@ namespace AGS.Types
                 sw.WriteLine("//#Encoding=" + (_encodingHint ?? "ASCII"));
                 sw.WriteLine("// Text language, use standard locale strings, like 'en', 'en_US', etc");
                 sw.WriteLine($"//#Language={( _language != null ? _language.Replace('-', '_') : string.Empty )}");
+                sw.WriteLine("// Whether engine should translate Parser.Said strings automatically - ON or OFF");
+                sw.WriteLine($"//#AutoTranslateParserSaid={(_autoTranslateParserSaid ? TAG_ON : TAG_OFF)}");
                 if (_fontOverrides.Count != 0)
                 {
                     WriteFontOverrides(sw);
@@ -185,8 +204,15 @@ namespace AGS.Types
                 sw.WriteLine("// ** REMEMBER, WRITE YOUR TRANSLATION IN THE EMPTY LINES, DO");
                 sw.WriteLine("// ** NOT CHANGE THE EXISTING TEXT.");
 
+                TranslationEntryOptions entryOptions = null;
                 foreach (string key in _translatedLines.Keys)
                 {
+                    if (_entryOptions.TryGetValue(key, out entryOptions))
+                    {
+                        foreach (var a in entryOptions.Metadata)
+                            sw.WriteLine($"//${a}");
+                    }
+
                     sw.WriteLine(key);
                     sw.WriteLine(_translatedLines[key]);
                 }
@@ -230,6 +256,8 @@ namespace AGS.Types
         {
             _fontOverrides = new Dictionary<int, Font>();
             _translatedLines = new Dictionary<string, string>();
+            _entryOptions = new Dictionary<string, TranslationEntryOptions>();
+            List<string> annotateNextLine = new List<string>();
             string old_encoding = _encodingHint;
 
             using (StreamReader sr = new StreamReader(FileName, _encoding))
@@ -249,8 +277,13 @@ namespace AGS.Types
                                 return;
                             }
                         }
+                        else if (line.Length > 2 && line[2] == '$')
+                        {
+                            annotateNextLine.Add(line.Substring(3));
+                        }
                         continue;
                     }
+
                     string originalText = line;
                     string translatedText = sr.ReadLine();
                     if (translatedText == null)
@@ -261,6 +294,11 @@ namespace AGS.Types
 					if (!_translatedLines.ContainsKey(originalText))
 					{
 						_translatedLines.Add(originalText, translatedText);
+                        if (annotateNextLine.Count > 0)
+                        {
+                            _entryOptions[originalText] = CreateEntryOptions(annotateNextLine);
+                            annotateNextLine.Clear();
+                        }
 					}
                 }
             }
@@ -296,6 +334,13 @@ namespace AGS.Types
                     _rightToLeftText = null;
                 }
             }
+            else if (key == AUTO_PARSERSAID_TAG)
+            {
+                if (value == TAG_ON)
+                    _autoTranslateParserSaid = true;
+                else
+                    _autoTranslateParserSaid = false;
+            }
             else if (key == ENCODING_TAG)
             {
                 EncodingHint = value;
@@ -319,11 +364,12 @@ namespace AGS.Types
 
         private int? ReadOptionalInt(string textToParse)
         {
-            if (textToParse == TAG_DEFAULT)
+            int value;
+            if (textToParse == TAG_DEFAULT || !int.TryParse(textToParse, out value))
             {
                 return null;
             }
-            return Convert.ToInt32(textToParse);
+            return value;
         }
 
         private string WriteOptionalInt(int? currentValue)
@@ -525,6 +571,27 @@ namespace AGS.Types
                 }
                 return font;
             }
+        }
+
+        private TranslationEntryOptions CreateEntryOptions(List<string> annotations)
+        {
+            TranslationEntryOptions options = new TranslationEntryOptions();
+            options.Metadata = new List<string>(annotations);
+
+            // Parse for known annotations
+            foreach (var annotation in annotations)
+            {
+                var keyValue = ParseKeyValue(annotation);
+                var key = keyValue.Item1;
+                var value = keyValue.Item2;
+
+                if (key == ANNOTATE_PARSERWORD)
+                {
+                    options.ParserWordID = Utilities.ParseIntOrDefault(value, -1);
+                }
+            }
+
+            return options;
         }
     }
 }
