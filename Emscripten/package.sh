@@ -33,7 +33,7 @@ VERSION=$(awk -F'[ "]+' '
     print $3;
     exit
   }' "${ROOT_DIR}/Common/ac/def_version.h")
-ARCHIVE_NAME="ags_${VERSION}_web.tar.gz "
+ARCHIVE_NAME="ags_${VERSION}_web.tar.gz"
 
 TMP_DIR="$(mktemp -d)"
 
@@ -49,6 +49,6 @@ ${TAR_CMD} -f "${ARCHIVE_NAME}" -cvzC "${TMP_DIR}" \
 
 rm -rf "${TMP_DIR}"
 
-mv "${ARCHIVE_NAME}" "${ROOT_DIR}/${ARCHIVE_NAME}"
+mv --verbose "${ARCHIVE_NAME}" "${ROOT_DIR}/${ARCHIVE_NAME}"
 
-echo "Packaged web build as: ${ARCHIVE_NAME} at ${ROOT_DIR}"
+echo "Packaged web build as: '${ARCHIVE_NAME}' at '${ROOT_DIR}'"
