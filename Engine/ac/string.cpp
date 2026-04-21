@@ -16,6 +16,7 @@
 #include "ac/string.h"
 #include "ac/common.h"
 #include "ac/display.h"
+#include "ac/game.h"
 #include "ac/gamesetupstruct.h"
 #include "ac/gamestate.h"
 #include "ac/global_translation.h"
@@ -26,6 +27,7 @@
 #include "debug/debug_log.h"
 #include "script/runtimescriptvalue.h"
 #include "util/string_compat.h"
+#include "util/utf8.h"
 
 using namespace AGS::Common;
 
@@ -131,50 +133,53 @@ const char* String_Substring(const char *thisString, int index, int length) {
     return CreateNewScriptString(std::move(buf));
 }
 
-int String_CompareTo(const char *thisString, const char *otherString, bool caseSensitive)
+int String_CompareTo(const char *thisString, const char *otherString, int compare_style)
 {
-    if (get_uformat() == U_UTF8)
+    compare_style = ValidateStringComparison("String.CompareTo", compare_style);
+    const bool case_sensitive = (compare_style & kScCaseSensitiveFlag) != 0;
+    const bool locale_aware = ((compare_style & kScLocaleAwareFlag) != 0) && (get_uformat() == U_UTF8);
+    if (locale_aware)
     {
-        if (caseSensitive)
-        {
+        if (case_sensitive)
             return StrUtil::LexographicalCompare(thisString, otherString, play.GetTextLocaleName().GetCStr());
-        }
         else
-        {
             return StrUtil::LexographicalCompareNoCase(thisString, otherString, play.GetTextLocaleName().GetCStr());
-        }
     }
     else
     {
-        if (caseSensitive)
-        {
+        if (case_sensitive)
             return strcmp(thisString, otherString);
-        }
         else
-        {
-            return ags_stricmp(thisString, otherString);
-        }
+            return ustricmp(thisString, otherString);
     }
 }
 
-int String_StartsWith(const char *thisString, const char *checkForString, bool caseSensitive) {
-
-    if (caseSensitive) {
+int String_StartsWith(const char *thisString, const char *checkForString, int compare_style)
+{
+    compare_style = ValidateStringComparison("String.CompareTo", compare_style);
+    const bool case_sensitive = (compare_style & kScCaseSensitiveFlag) != 0;
+    if (case_sensitive)
+    {
         return (strncmp(thisString, checkForString, strlen(checkForString)) == 0) ? 1 : 0;
     }
-    else {
+    else
+    {
         return (ustrnicmp(thisString, checkForString, ustrlen(checkForString)) == 0) ? 1 : 0;
     }
 }
 
-int String_EndsWith(const char *thisString, const char *checkForString, bool caseSensitive) {
+int String_EndsWith(const char *thisString, const char *checkForString, int compare_style)
+{
+    compare_style = ValidateStringComparison("String.CompareTo", compare_style);
+
     // NOTE: we need size in bytes here
     const auto &header = ScriptString::GetHeader(thisString);
     size_t checklen = strlen(checkForString);
     if (checklen > header.Length)
         return 0;
 
-    if (caseSensitive) 
+    const bool case_sensitive = (compare_style & kScCaseSensitiveFlag) != 0;
+    if (case_sensitive) 
     {
         return (strcmp(thisString + (header.Length - checklen), checkForString) == 0) ? 1 : 0;
     }
@@ -184,14 +189,17 @@ int String_EndsWith(const char *thisString, const char *checkForString, bool cas
     }
 }
 
-const char* String_Replace(const char *thisString, const char *lookForText, const char *replaceWithText, bool caseSensitive)
+const char* String_Replace(const char *thisString, const char *lookForText, const char *replaceWithText, int compare_style)
 {
+    compare_style = ValidateStringComparison("String.CompareTo", compare_style);
+    const bool case_sensitive = (compare_style & kScCaseSensitiveFlag) != 0;
+
     const auto &this_header = ScriptString::GetHeader(thisString);
     // For case-sensitive search select simple ascii "strstr", for strict byte-to-byte comparison;
     // For case-insensitive search select no-case unicode-compatible variant
     typedef const char* (*fn_strstr)(const char *, const char *);
     fn_strstr pfn_strstr = 
-        caseSensitive ? reinterpret_cast<fn_strstr>(ags_strstr) : reinterpret_cast<fn_strstr>(ustrcasestr);
+        case_sensitive ? reinterpret_cast<fn_strstr>(ags_strstr) : reinterpret_cast<fn_strstr>(ustrcasestr);
     int match_len, match_ulen;
     ustrlen2(lookForText, &match_len, &match_ulen);
 
@@ -413,7 +421,7 @@ RuntimeScriptValue Sc_String_AppendChar(void *self, const RuntimeScriptValue *pa
 // int (const char *thisString, const char *otherString, bool caseSensitive)
 RuntimeScriptValue Sc_String_CompareTo(void *self, const RuntimeScriptValue *params, int32_t param_count)
 {
-    API_OBJCALL_INT_POBJ_PBOOL(const char, String_CompareTo, const char);
+    API_OBJCALL_INT_POBJ_PINT(const char, String_CompareTo, const char);
 }
 
 // int  (const char *s1, const char *s2)

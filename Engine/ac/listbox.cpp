@@ -190,13 +190,13 @@ void ListBox_SetItemText(GUIListBox *listbox, int index, const char *newtext) {
   }
 }
 
-void ListBox_SortItems(GUIListBox *listbox, int case_sensitive, int sort_dir)
+void ListBox_SortItems(GUIListBox *listbox, int compare_style, int sort_dir)
 {
-    case_sensitive = ValidateStringComparison("ListBox.SortItems", case_sensitive);
+    compare_style = ValidateStringComparison("ListBox.SortItems", compare_style);
     sort_dir = ValidateSortDirection("ListBox.SortItems", sort_dir);
     if (sort_dir != kScSortNone)
     {
-        listbox->SortItems((case_sensitive == kScCaseInsensitive), (sort_dir != kScSortDescending));
+        listbox->SortItems((compare_style & kScCaseSensitiveFlag) == 0, (compare_style & kScLocaleAwareFlag) != 0, (sort_dir != kScSortDescending));
     }
 }
 

@@ -71,7 +71,7 @@ public:
     void Draw(Bitmap *ds, int x = 0, int y = 0) override;
     int InsertItem(int index, const String &text);
     void RemoveItem(int index);
-    void SortItems(bool nocase, bool ascending);
+    void SortItems(bool nocase, bool locale_aware, bool ascending);
     void UpdateVisualState() override;
 
     // Events

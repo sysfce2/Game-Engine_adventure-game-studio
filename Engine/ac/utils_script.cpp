@@ -25,22 +25,22 @@ using namespace AGS::Common;
 
 struct DynStrCmpAuto
 {
-    DynStrCmpAuto(std::unique_ptr<StrLessAutoImpl> &&less_impl)
-        : _lessImpl(std::move(less_impl)) { }
+    DynStrCmpAuto(std::unique_ptr<IStrCmp> &&cmp_impl)
+        : _cmpImpl(std::move(cmp_impl)) { }
 
     bool operator()(const DynObjectRef &s1, const DynObjectRef &s2) const
     {
-        return _lessImpl->operator()(
+        return _cmpImpl->operator()(
             String::Wrapper(static_cast<const char*>(s1.Obj())),
-            String::Wrapper(static_cast<const char*>(s2.Obj())));
+            String::Wrapper(static_cast<const char*>(s2.Obj()))) < 0;
     }
 
 private:
     // It's shared ptr, because STL requires a copy constructor for predicates
-    std::shared_ptr<StrLessAutoImpl> _lessImpl;
+    std::shared_ptr<IStrCmp> _cmpImpl;
 };
 
-void Utils_SortStrings(void* arrobj, int string_compare, int sort_dir)
+void Utils_SortStrings(void* arrobj, int compare_style, int sort_dir)
 {
     const auto scsort_dir = ValidateSortDirection("Utils.SortStrings", sort_dir);
     if (scsort_dir == kScSortNone)
@@ -53,8 +53,9 @@ void Utils_SortStrings(void* arrobj, int string_compare, int sort_dir)
         return;
     }
 
-    const auto scstring_compare = ValidateStringComparison("Utils.SortStrings", string_compare);
-    DynStrCmpAuto dynstr_less(StrUtil::GetStrLessAutoImplFor(get_uformat() == U_UTF8, string_compare == kScCaseInsensitive, play.GetTextLocaleName().GetCStr()));
+    compare_style = ValidateStringComparison("Utils.SortStrings", compare_style);
+    DynStrCmpAuto dynstr_less(StrUtil::GetStrCmpImplFor(get_uformat() == U_UTF8, (compare_style & kScCaseSensitiveFlag) == 0,
+        (compare_style & kScLocaleAwareFlag) != 0 ? play.GetTextLocaleName().GetCStr() : nullptr));
     if (scsort_dir == kScSortAscending)
         std::sort(string_objs.begin(), string_objs.end(), dynstr_less);
     else

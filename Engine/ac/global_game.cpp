@@ -309,11 +309,14 @@ static void SortSaveList(std::vector<SaveListItem> &saves, ScriptSaveGameSortSty
             std::sort(saves.rbegin(), saves.rend(), SaveItemCmpByTime());
         break;
     case kScSaveGameSort_Description:
+    {
+        SaveItemCmpByDesc cmp_by_desc(StrUtil::GetStrCmpImplFor(get_uformat() == U_UTF8, false, play.GetTextLocaleName().GetCStr()));
         if (ascending)
-            std::sort(saves.begin(), saves.end(), SaveItemCmpByDesc(play.GetTextLocaleName().GetCStr()));
+            std::sort(saves.begin(), saves.end(), cmp_by_desc);
         else
-            std::sort(saves.rbegin(), saves.rend(), SaveItemCmpByDesc(play.GetTextLocaleName().GetCStr()));
+            std::sort(saves.rbegin(), saves.rend(), cmp_by_desc);
         break;
+    }
     default: break;
     }
 }

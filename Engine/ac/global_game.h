@@ -23,6 +23,7 @@
 #include <time.h>
 #include "ac/runtime_defines.h"
 #include "util/string.h"
+#include "util/string_types.h"
 using namespace AGS; // FIXME later
 
 struct SaveListItem
@@ -56,34 +57,19 @@ struct SaveItemCmpByTime
 
 struct SaveItemCmpByDesc
 {
-    SaveItemCmpByDesc()
-        : _loc(std::locale())
+    SaveItemCmpByDesc(std::unique_ptr<AGS::Common::IStrCmp> &&cmp_impl)
+        : _cmpImpl(std::move(cmp_impl))
     {
-    }
-
-    SaveItemCmpByDesc(const char *locale_name)
-    {
-        try
-        {
-            if (locale_name && *locale_name)
-                _loc = std::locale(locale_name);
-            else
-                _loc = std::locale();
-        }
-        catch (const std::runtime_error&)
-        {
-            _loc = std::locale();
-        }
     }
 
     bool operator()(const SaveListItem &item1, const SaveListItem &item2) const
     {
-        return std::use_facet<std::collate<char>>(_loc).
-            compare(item1.Description.GetCStr(), item1.Description.GetCStr() + item1.Description.GetLength(), item2.Description.GetCStr(), item2.Description.GetCStr() + item2.Description.GetLength()) < 0;
+        return _cmpImpl->operator()(item1.Description, item2.Description) < 0;
     }
 
 private:
-    std::locale _loc;
+    // It's shared ptr, because STL requires a copy constructor for predicates
+    std::shared_ptr<AGS::Common::IStrCmp> _cmpImpl;
 };
 
 
