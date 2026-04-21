@@ -89,6 +89,7 @@
 #define OPT_SAVECOMPONENTSIGNORE 55 // ignore these savegame components (flag mask)
 #define OPT_GAMEFPS         56
 #define OPT_GUICONTROLMOUSEBUT 57 // whether common gui controls should react only to LMB (0 - any, 1 - LMB)
+#define OPT_AUTOTRANSPARSERSAID 58 // automatically translate arguments to Parser functions, like Said(...).
 #define OPT_HIGHESTOPTION   OPT_GUICONTROLMOUSEBUT
 #define OPT_NOMODMUSIC      98 // [DEPRECATED]
 #define OPT_LIPSYNCTEXT     99
