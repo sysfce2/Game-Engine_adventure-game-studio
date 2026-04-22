@@ -221,9 +221,49 @@ jobs:
           name: android-project
           path: AGS-*-android-proj-*.zip
 
+  windows-deps:
+    name: Windows Dependencies
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: microsoft/setup-msbuild@v3
+
+      - name: Restore cached deps
+        id: cache-win-deps
+        uses: actions/cache@v5
+        with:
+          path: C:\Lib
+          key: win-deps-${{ hashFiles('Windows/setup_ags_build_deps.bat') }}
+
+      - name: Build dependencies
+        if: steps.cache-win-deps.outputs.cache-hit != 'true'
+        shell: cmd
+        run: Windows\setup_ags_build_deps.bat
+
+      - name: Build WinDevDependenciesVS archive
+        shell: cmd
+        run: |
+          pushd "C:\Lib\SDL_sound"
+          if exist build_x86 del /Q /S build_x86\* && rd /Q /S build_x86
+          if exist build_x64 del /Q /S build_x64\* && rd /Q /S build_x64
+          popd
+          tar -f WinDevDependenciesVS.zip -acv --strip-components 2 C:\Lib
+          dir WinDevDependenciesVS.zip
+
+      - name: Upload WinDevDependenciesVS
+        uses: actions/upload-artifact@v7
+        with:
+          # because archive is false, the name is the filename
+          if-no-files-found: error
+          archive: false
+          path: WinDevDependenciesVS.zip
+
   windows-msvc-tests:
     name: Windows MSVC Tests
     runs-on: windows-latest
+    needs: windows-deps
     timeout-minutes: 40
     env:
       AGS_LIBOGG_LIB:        C:\Lib\Xiph\x86
@@ -240,17 +280,11 @@ jobs:
 
       - uses: microsoft/setup-msbuild@v3
 
-      - name: Cache Windows build dependencies
-        id: cache-win-deps
-        uses: actions/cache@v5
+      - name: Download Windows dependencies
+        uses: actions/download-artifact@v8
         with:
+          name: WinDevDependenciesVS.zip
           path: C:\Lib
-          key: win-deps-${{ hashFiles('Windows/setup_ags_build_deps.bat') }}
-
-      - name: Install Windows build dependencies
-        if: steps.cache-win-deps.outputs.cache-hit != 'true'
-        shell: cmd
-        run: Windows\setup_ags_build_deps.bat
 
       - name: Build Compiler test runner (x86)
         shell: cmd
@@ -307,6 +341,7 @@ jobs:
   windows-msvc-engine:
     name: Windows MSVC Engine
     runs-on: windows-latest
+    needs: windows-deps
     timeout-minutes: 40
     env:
       AGS_LIBOGG_LIB:        C:\Lib\Xiph\x86
@@ -321,17 +356,11 @@ jobs:
 
       - uses: microsoft/setup-msbuild@v3
 
-      - name: Cache Windows build dependencies
-        id: cache-win-deps
-        uses: actions/cache@v5
+      - name: Download Windows dependencies
+        uses: actions/download-artifact@v8
         with:
+          name: WinDevDependenciesVS.zip
           path: C:\Lib
-          key: win-deps-${{ hashFiles('Windows/setup_ags_build_deps.bat') }}
-
-      - name: Install Windows build dependencies
-        if: steps.cache-win-deps.outputs.cache-hit != 'true'
-        shell: cmd
-        run: Windows\setup_ags_build_deps.bat
 
       - name: Build Engine (x86 Debug)
         shell: cmd
@@ -410,6 +439,7 @@ jobs:
   windows-msvc-editor:
     name: Windows MSVC Editor
     runs-on: windows-latest
+    needs: windows-deps
     timeout-minutes: 40
     env:
       AGS_LIBOGG_LIB:        C:\Lib\Xiph\x86
@@ -424,17 +454,11 @@ jobs:
 
       - uses: microsoft/setup-msbuild@v3
 
-      - name: Cache Windows build dependencies
-        id: cache-win-deps
-        uses: actions/cache@v5
+      - name: Download Windows dependencies
+        uses: actions/download-artifact@v8
         with:
+          name: WinDevDependenciesVS.zip
           path: C:\Lib
-          key: win-deps-${{ hashFiles('Windows/setup_ags_build_deps.bat') }}
-
-      - name: Install Windows build dependencies
-        if: steps.cache-win-deps.outputs.cache-hit != 'true'
-        shell: cmd
-        run: Windows\setup_ags_build_deps.bat
 
       - name: Copy irrKlang DLLs to Editor\References
         shell: pwsh
@@ -562,6 +586,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 60
     needs:
+      - windows-deps
       - windows-msvc-editor
       - windows-msvc-engine
     env:
@@ -570,21 +595,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Cache Windows build dependencies
-        id: cache-win-deps
-        uses: actions/cache@v5
+      - name: Download Windows dependencies
+        uses: actions/download-artifact@v8
         with:
+          name: windows-dev-dependencies
           path: C:\Lib
-          key: win-deps-${{ hashFiles('Windows/setup_ags_build_deps.bat') }}
-
-      - name: Setup msbuild if we need to build SDL_sound (For WinDevDependenciesVS)
-        uses: microsoft/setup-msbuild@v3
-        if: steps.cache-win-deps.outputs.cache-hit != 'true'
-
-      - name: Install Windows build dependencies (For WinDevDependenciesVS)
-        if: steps.cache-win-deps.outputs.cache-hit != 'true'
-        shell: cmd
-        run: Windows\setup_ags_build_deps.bat
 
       - name: Download Editor binaries
         uses: actions/download-artifact@v8
@@ -598,10 +613,12 @@ jobs:
           name: windows-engine-binaries-x86
           path: Windows\Installer\Source\Engine_tmp
 
-      - name: Copy acwin.exe and SDL2.dll
+      - name: Copy vcredist, acwin.exe and SDL2.dll
         shell: cmd
         run: |
+          mkdir Windows\Installer\Source\Redist
           mkdir Windows\Installer\Source\Engine
+          copy C:\Lib\VcRedist\vc_redist.x86.exe Windows\Installer\Source\Redist\vc_redist.x86.exe
           copy Windows\Installer\Source\Engine_tmp\Release\acwin.exe Windows\Installer\Source\Engine\acwin.exe
           copy %AGS_SDL_LIB%\SDL2.dll Windows\Installer\Source\Engine\SDL2.dll
 
@@ -634,14 +651,3 @@ jobs:
           name: ags-archive
           path: AGS-*.zip
 
-      - name: Build WinDevDependenciesVS archive
-        shell: cmd
-        run: |
-          pushd "C:\Lib\SDL_sound" && del /Q /S build_x86\* && rd /Q /S build_x86 && del /Q /S build_x64\* && rd /Q /S build_x64 && popd
-          tar -f WinDevDependenciesVS.zip -acv --strip-components 2 C:\Lib
-
-      - name: Upload WinDevDependenciesVS
-        uses: actions/upload-artifact@v7
-        with:
-          name: windows-dev-dependencies
-          path: WinDevDependenciesVS.zip
