@@ -10,7 +10,7 @@ env:
 
 jobs:
   build:
-    name: ${{ matrix.platform.name }}
+    name: Runtime ${{ matrix.platform.name }} Build and Tests
     runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 20
     defaults:
@@ -21,8 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-        - { name: Windows-mingw-x86_64, os: windows-latest,   sys: Windows, gfx: D3D9, artifact: 'ags-mingw-x86_64', shell: 'msys2 {0}', runbin: "./ags",      bindir: "",        cmakecmd: "cmake", msystem: mingw64, msys-env: mingw-w64-x86_64 }
-        - { name: Windows-mingw-arm64,  os: windows-11-arm,   sys: Windows, gfx: D3D9, artifact: 'ags-mingw-arm64',  shell: 'msys2 {0}', runbin: "./ags",      bindir: "",        cmakecmd: "cmake", msystem: clangarm64, msys-env: mingw-w64-clang-aarch64 }
+        - { name: Win-mingw-x86_64, os: windows-latest,   sys: Windows, gfx: D3D9, artifact: 'ags-mingw-x86_64', shell: 'msys2 {0}', runbin: "./ags",      bindir: "",        cmakecmd: "cmake", msystem: mingw64, msys-env: mingw-w64-x86_64 }
+        - { name: Win-mingw-arm64,  os: windows-11-arm,   sys: Windows, gfx: D3D9, artifact: 'ags-mingw-arm64',  shell: 'msys2 {0}', runbin: "./ags",      bindir: "",        cmakecmd: "cmake", msystem: clangarm64, msys-env: mingw-w64-clang-aarch64 }
         - { name: Windows,              os: windows-latest,   sys: Windows, gfx: D3D9, artifact: 'ags-windows',      shell: cmd,         runbin: ".\\ags.exe", bindir: "Release", cmakecmd: "cmake" }
         - { name: Ubuntu-x86_64,        os: ubuntu-latest,    sys: Ubuntu,  gfx: OGL,  artifact: 'ags-linux-x86_64', shell: sh,          runbin: "./ags",      bindir: "",        cmakecmd: "cmake" }
         - { name: Ubuntu-Arm64,         os: ubuntu-22.04-arm, sys: Ubuntu,  gfx: OGL,  artifact: 'ags-linux-Arm64',  shell: sh,          runbin: "./ags",      bindir: "",        cmakecmd: "cmake" }
@@ -80,7 +80,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
       with:
-        name: ${{ matrix.platform.artifact }}
+        name: runtime-${{ matrix.platform.artifact }}
         path: |
           ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ags.exe
           ${{github.workspace}}/build/ags
@@ -127,7 +127,7 @@ jobs:
       run: |
         tappy agstest_software.tap
 
-  build-emscripten:
+  build-emscripten-bundle:
     name: Emscripten
     runs-on: ubuntu-latest
     env:
@@ -160,10 +160,10 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: emscripten-ags-package
+          name: ags-bundle-emscripten
           path: ags_*_web.tar.gz
 
-  build-android:
+  build-android-bundle:
     name: Android
     runs-on: ubuntu-latest
     steps:
@@ -218,7 +218,7 @@ jobs:
   
       - uses: actions/upload-artifact@v7
         with:
-          name: android-project
+          name: ags-bundle-android
           path: AGS-*-android-proj-*.zip
 
   windows-deps:
