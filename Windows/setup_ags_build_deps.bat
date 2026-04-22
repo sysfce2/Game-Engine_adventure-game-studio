@@ -10,6 +10,8 @@ set XIPH_VERSION=2022.12.23
 set SDL2_VERSION_TAG=release-2.30.11
 set SDL2_VERSION_NUMBER=2.30.11
 set SDLSOUND_COMMIT=474dbf755a1b67ebe7a55467b4f65e033f268aff
+set VCREDIST_X86_URL=https://download.visualstudio.microsoft.com/download/pr/5319f718-2a84-4aff-86be-8dbdefd92ca1/DD1A8BE03398367745A87A5E35BEBDAB00FDAD080CF42AF0C3F20802D08C25D4/VC_redist.x86.exe
+set VCREDIST_X64_URL=https://download.visualstudio.microsoft.com/download/pr/c7dac50a-e3e8-40f6-bbb2-9cc4e3dfcabe/1821577409C35B2B9505AC833E246376CC68A8262972100444010B57226F0940/VC_redist.x64.exe
 
 set INSTALL_ROOT=C:\Lib
 
@@ -45,15 +47,29 @@ exit /b
 
 :download
 REM %1 = URL, %2 = output file
-curl.exe -L --fail --silent --show-error -o "%~2" "%~1"
+curl.exe -L --fail --silent --show-error --retry 3 --retry-delay 5 --retry-connrefused --max-time 300 -o "%~2" "%~1"
 if errorlevel 1 (
     echo Download failed: %~1
+    if exist "%~2" del /f /q "%~2"
     exit /b 1
 )
 exit /b
 
 
 :main
+
+REM --- VcRedist begin --------------------------------------------------------
+REM Note: VcRedist is only required for the installer.
+
+call :recreate_dir "%INSTALL_ROOT%\VcRedist"
+
+
+call :download "%VCREDIST_X86_URL%" "%INSTALL_ROOT%\VcRedist\vc_redist.x86.exe" || exit /b 1
+call :download "%VCREDIST_X64_URL%" "%INSTALL_ROOT%\VcRedist\vc_redist.x64.exe" || exit /b 1
+
+echo Downloaded Vc Redistributables.
+echo Done.
+REM --- VcRedist end ----------------------------------------------------------
 
 REM --- irrKlang begin --------------------------------------------------------
 REM Note: irrKlang is only required for the AGS Editor.
@@ -147,3 +163,4 @@ echo irrKlang:  %INSTALL_ROOT%\irrKlang
 echo Xiph:      %INSTALL_ROOT%\Xiph
 echo SDL2:      %INSTALL_ROOT%\SDL2
 echo SDL_sound: %INSTALL_ROOT%\SDL_sound
+echo VcRedist:  %INSTALL_ROOT%\VcRedist
