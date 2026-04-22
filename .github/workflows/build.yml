@@ -71,13 +71,13 @@ jobs:
         ${{ matrix.platform.cmakecmd }} -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DAGS_BUILD_TOOLS=1 -DAGS_TESTS=1 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
-      run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}} --parallel 4
+      run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}} --parallel 8
 
     - name: Test
       working-directory: ${{github.workspace}}/build
       run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
 
-    - name: Upload artifacts
+    - name: Upload runtime artifacts
       uses: actions/upload-artifact@v7
       with:
         name: runtime-${{ matrix.platform.artifact }}
@@ -588,6 +588,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 60
     needs:
+      - build-emscripten-bundle
+      - build-android-bundle
       - windows-deps
       - windows-msvc-editor
       - windows-msvc-engine
@@ -637,12 +639,42 @@ jobs:
           mkdir Windows\Installer\Source\Templates
           curl -fLSs https://github.com/%TEMPLATES_REPOSITORY%/tarball/${{env.BASE_BRANCH}} | tar -f - -xvzC Windows\Installer\Source\Templates --strip-components 2
 
+      - name: Download Emscripten bundle
+        uses: actions/download-artifact@v8
+        with:
+          name: ags-bundle-emscripten
+          path: _ems_tmp
+
+      - name: Extract Emscripten files
+        shell: cmd
+        run: |
+          mkdir Windows\Installer\Source\Web
+          call Script\setvar.cmd ACI_VERSION_STR
+          tar -f _ems_tmp\ags_%ACI_VERSION_STR%_web.tar.gz -xvC Windows\Installer\Source\Web
+          rd /s /q _ems_tmp
+
+      - name: Download Android project archive
+        uses: actions/download-artifact@v8
+        with:
+          name: ags-bundle-android
+          path: _android_tmp
+
+      - name: Extract Android project
+        shell: cmd
+        run: |
+          mkdir Windows\Installer\Source\Android
+          call Script\setvar.cmd ACI_VERSION_STR
+          tar -f _android_tmp\AGS-%ACI_VERSION_STR%-android-proj-release.zip -xvzC Windows\Installer\Source\Android
+          rd /s /q _android_tmp
+
       - name: Build release archive
         shell: cmd
         run: |
           move Windows\Installer\Source\Docs\* Windows\Installer\Source\Editor\
           move Windows\Installer\Source\Engine\* Windows\Installer\Source\Editor\
           move Windows\Installer\Source\Licenses Windows\Installer\Source\Editor\
+          move Windows\Installer\Source\Web       Windows\Installer\Source\Editor\
+          move Windows\Installer\Source\Android   Windows\Installer\Source\Editor\
           move Windows\Installer\Source\Templates Windows\Installer\Source\Editor\
           move Windows\Installer\Source\URLs Windows\Installer\Source\Editor\
           tar -f AGS-Package.zip -acv --strip-components 4 Windows\Installer\Source\Editor
