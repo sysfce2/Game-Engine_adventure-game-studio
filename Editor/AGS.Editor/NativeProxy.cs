@@ -321,9 +321,19 @@ namespace AGS.Editor
             }
         }
 
+        public Room LoadRoomForEditing(UnloadedRoom roomToLoad, Encoding defEncoding = null)
+        {
+            return _native.LoadRoomForEditing(roomToLoad, defEncoding);
+        }
+
         public Room LoadRoom(UnloadedRoom roomToLoad, Encoding defEncoding = null)
         {
-            return _native.LoadRoomFile(roomToLoad, defEncoding);
+            return _native.LoadRoom(roomToLoad, defEncoding);
+        }
+
+        public void UnloadRoom(Room room)
+        {
+
         }
 
         public void SaveRoom(Room roomToSave)

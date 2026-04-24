@@ -1790,12 +1790,6 @@ AGSString load_room_file(RoomStruct &rs, const AGSString &filename) {
   }
 
   set_palette_range(palette, 0, 255, 0);
-  
-  if ((rs.BgFrames[0].Graphic->GetColorDepth() > 8) &&
-      (thisgame.color_depth == 1))
-  {
-      MessageBox(NULL, "WARNING: This room is hi-color, but your game is currently 256-colour. You will not be able to use this room in this game. Also, the room background will not look right in the editor.", "Colour depth warning", MB_OK);
-  }
 
   RoomTools->roomModified = false;
 
@@ -4154,7 +4148,10 @@ void convert_room_from_native(const RoomStruct &rs, Room ^room, System::Text::En
     room->Interactions->ScriptModule = roomScriptName;
 }
 
-AGS::Types::Room^ load_crm_file(UnloadedRoom ^roomToLoad, System::Text::Encoding ^defEncoding)
+// Loads room file for editing in the editor.
+// This initializes the singleton of type RoomStruct in the native code,
+// and the editing tools.
+AGS::Types::Room^ load_room_for_editing(UnloadedRoom ^roomToLoad, System::Text::Encoding ^defEncoding)
 {
     AGSString roomFileName = TextHelper::ConvertUTF8(roomToLoad->FileName);
 
@@ -4169,12 +4166,49 @@ AGS::Types::Room^ load_crm_file(UnloadedRoom ^roomToLoad, System::Text::Encoding
     Room ^room = gcnew Room(roomToLoad->Number);
     convert_room_from_native(thisroom, room, defEncoding);
     room->_roomStructPtr = (IntPtr)&thisroom;
-
     room->Description = roomToLoad->Description;
     room->Script = roomToLoad->Script;
 
     clear_undo_buffer();
     return room;
+}
+
+// Load room file into the temporary object and converts to the managed Room object.
+// This does not affect the editor's state.
+AGS::Types::Room^ load_room(UnloadedRoom ^roomToLoad, System::Text::Encoding ^defEncoding)
+{
+    AGSString roomFileName = TextHelper::ConvertUTF8(roomToLoad->FileName);
+
+    std::unique_ptr<RoomStruct> rs(new RoomStruct());
+    AGSString errorMsg = load_room_file(*rs, roomFileName);
+    if (!errorMsg.IsEmpty())
+    {
+        throw gcnew AGSEditorException(TextHelper::ConvertUTF8(errorMsg));
+    }
+
+    Room ^room = gcnew Room(roomToLoad->Number);
+    convert_room_from_native(*rs, room, defEncoding);
+    room->_roomStructPtr = (IntPtr)rs.release();
+    room->Description = roomToLoad->Description;
+    room->Script = roomToLoad->Script;
+    return room;
+}
+
+void unload_room(Room^ room)
+{
+    RoomStruct *theRoom = (RoomStruct*)(void*)room->_roomStructPtr;
+    if (theRoom)
+    {
+        if (theRoom == &thisroom)
+        {
+            thisroom.Free();
+        }
+        else
+        {
+            delete theRoom;
+        }
+    }
+    room->_roomStructPtr = IntPtr();
 }
 
 void convert_room_interactions_to_native(Room ^room, RoomStruct &rs);

@@ -125,7 +125,9 @@ namespace AGS
 			Dictionary<int,Sprite^>^ LoadAllSpriteDimensions();
 			void LoadNewSpriteFile();
             void ReplaceSpriteFile(String ^srcFileName);
-			Room^ LoadRoomFile(UnloadedRoom ^roomToLoad, System::Text::Encoding ^defEncoding);
+			Room^ LoadRoomForEditing(UnloadedRoom ^roomToLoad, System::Text::Encoding ^defEncoding);
+            Room^ LoadRoom(UnloadedRoom ^roomToLoad, System::Text::Encoding ^defEncoding);
+            void UnloadRoom(Room ^room);
 			void SaveRoomFile(Room ^roomToSave);
             void SaveDefaultRoomFile(Room ^roomToSave);
 			void DrawRoomBackground(int hDC, Room ^room, int x, int y, int backgroundNumber, float scaleFactor, RoomAreaMaskType maskType, int selectedArea, int maskTransparency);
