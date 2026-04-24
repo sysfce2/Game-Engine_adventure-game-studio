@@ -13,8 +13,8 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
-    name: Runtime ${{ matrix.platform.name }} Build and Tests
+  build-test:
+    name: Test ${{ matrix.platform.name }} Build
     runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 20
     defaults:
@@ -682,6 +682,7 @@ jobs:
     needs:
       - build-emscripten-bundle
       - build-android-bundle
+      - build-linux-bundle
       - windows-deps
       - windows-msvc-editor
       - windows-msvc-engine
@@ -731,6 +732,20 @@ jobs:
           mkdir Windows\Installer\Source\Templates
           curl -fLSs https://github.com/%TEMPLATES_REPOSITORY%/tarball/${{env.BASE_BRANCH}} | tar -f - -xvzC Windows\Installer\Source\Templates --strip-components 2
 
+      - name: Download Linux bundle
+        uses: actions/download-artifact@v8
+        with:
+          name: ags-bundle-linux
+          path: _linux_tmp
+
+      - name: Extract Linux bundle
+        shell: cmd
+        run: |
+          mkdir Windows\Installer\Source\Linux
+          call Script\setvar.cmd ACI_VERSION_STR
+          tar -f _linux_tmp\ags_%ACI_VERSION_STR%_linux.tar.gz -xvC Windows\Installer\Source\Linux --strip-components 1
+          rd /s /q _linux_tmp
+
       - name: Download Emscripten bundle
         uses: actions/download-artifact@v8
         with:
@@ -759,17 +774,36 @@ jobs:
           tar -f _android_tmp\AGS-%ACI_VERSION_STR%-android-proj-release.zip -xvzC Windows\Installer\Source\Android
           rd /s /q _android_tmp
 
+      #   NOTE: Inno Setup 6.7.1 comes preinstalled in Windows runners.
+      #   It looks like it is also in PATH already, but our script expects its
+      # path through a parameter.
+      #   I will run it without anything because it should print the version
+      # and information that we can use to monitor what is pre-installed and
+      # if it changes.
+      - name: Run Inno Setup
+        shell: pwsh
+        run: |
+          ISCC.exe
+          Windows\Installer\build.ps1 -IsccPath 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v7
+        with:
+          name: ags-installer
+          path: Windows\Installer\Output\*.exe
+
       - name: Build release archive
         shell: cmd
         run: |
           move Windows\Installer\Source\Docs\* Windows\Installer\Source\Editor\
           move Windows\Installer\Source\Engine\* Windows\Installer\Source\Editor\
           move Windows\Installer\Source\Licenses Windows\Installer\Source\Editor\
+          move Windows\Installer\Source\Linux     Windows\Installer\Source\Editor\
           move Windows\Installer\Source\Web       Windows\Installer\Source\Editor\
           move Windows\Installer\Source\Android   Windows\Installer\Source\Editor\
           move Windows\Installer\Source\Templates Windows\Installer\Source\Editor\
           move Windows\Installer\Source\URLs Windows\Installer\Source\Editor\
-          tar -f AGS-Package.zip -acv --strip-components 4 Windows\Installer\Source\Editor
+          for %%f in (Windows\Installer\Output\*.exe) do tar -f %%~nf.zip -acv --strip-components 4 Windows\Installer\Source\Editor
 
       - name: Upload archive
         uses: actions/upload-artifact@v7
