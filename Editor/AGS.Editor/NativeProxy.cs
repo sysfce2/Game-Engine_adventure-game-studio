@@ -333,7 +333,7 @@ namespace AGS.Editor
 
         public void UnloadRoom(Room room)
         {
-
+            _native.UnloadRoom(room);
         }
 
         public void SaveRoom(Room roomToSave)

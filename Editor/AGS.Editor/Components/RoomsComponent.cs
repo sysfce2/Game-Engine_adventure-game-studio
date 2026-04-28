@@ -420,9 +420,9 @@ namespace AGS.Editor.Components
             {
                 UnloadCurrentRoom();
             }
-            else
+            else if (room is Room)
             {
-                _nativeProxy.UnloadRoom(_loadedRoom);
+                _nativeProxy.UnloadRoom(room as Room);
             }
         }
 
@@ -1648,15 +1648,16 @@ namespace AGS.Editor.Components
             foreach (UnloadedRoom unloadedRoom in roomsToRebuild)
 			{
 				Room room;
-				if ((_loadedRoom == null) || (_loadedRoom.Number != unloadedRoom.Number))
-				{
-					UnloadCurrentRoomAndGreyOutTree();
-					room = LoadRoomAsTemporary(unloadedRoom, errors, doLoadScript: true);
-				}
-				else
-				{
-					room = _loadedRoom;
-				}
+				if ((_loadedRoom != null) && (_loadedRoom.Number == unloadedRoom.Number))
+                {
+                    room = _loadedRoom;
+                }
+                else
+                {
+                    if (_loadedRoom != null)
+                        UnloadCurrentRoomAndGreyOutTree();
+                    room = LoadRoomAsTemporary(unloadedRoom, errors, doLoadScript: true);
+                }
 				// Ensure that the script is saved, in case it was modified on a room upgrade, for instance
 				room.Script.SaveToDisk();
 
@@ -1675,7 +1676,7 @@ namespace AGS.Editor.Components
                     errors.AddRange(roomErrors);
                 }
 
-                if (_loadedRoom == null)
+                if (_loadedRoom != room)
                 {
                     UnloadRoom(room);
                 }
@@ -2012,14 +2013,15 @@ namespace AGS.Editor.Components
             foreach (UnloadedRoom unloadedRoom in _agsEditor.CurrentGame.RootRoomFolder.AllItemsFlat)
             {
                 Room room;
-                if ((_loadedRoom == null) || (_loadedRoom.Number != unloadedRoom.Number))
+                if ((_loadedRoom != null) && (_loadedRoom.Number == unloadedRoom.Number))
                 {
-                    _guiController.Invoke(new Action(() => { UnloadCurrentRoomAndGreyOutTree(); }));
-                    room = LoadRoomAsTemporary(unloadedRoom, modifyRoom.Errors, modifyRoom.ModifyScript);
+                    room = _loadedRoom;
                 }
                 else
                 {
-                    room = _loadedRoom;
+                    if (_loadedRoom != null)
+                        _guiController.Invoke(new Action(() => { UnloadCurrentRoomAndGreyOutTree(); }));
+                    room = LoadRoomAsTemporary(unloadedRoom, modifyRoom.Errors, modifyRoom.ModifyScript);
                 }
 
                 if (room != null)
@@ -2033,6 +2035,10 @@ namespace AGS.Editor.Components
                             room.Script.SaveToDisk();
                         SaveRoomDirectly(room, roomErrors);
                         room.Modified = false;
+                    }
+                    if (room != _loadedRoom)
+                    {
+                        UnloadRoom(room);
                     }
                 }
 
