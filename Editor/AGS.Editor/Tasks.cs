@@ -1445,7 +1445,7 @@ namespace AGS.Editor
             ApplyCustomPropertySchemaChanges(allProps, schemaChanges);
 
             ComponentController.Instance.FindComponent<RoomsComponent>()?
-                .ModifyAllRooms((r, m) => { ApplyCustomPropertySchemaChangesInRoom(r, schemaChanges); });
+                .ModifyAllRooms((r, m) => { ApplyCustomPropertySchemaChangesInRoom(r, schemaChanges); }, modifyScript: false);
         }
     }
 }
