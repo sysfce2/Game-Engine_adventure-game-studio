@@ -4351,9 +4351,9 @@ void convert_room_to_native(Room ^room, RoomStruct &rs)
 
 void save_crm_file(Room ^room)
 {
-    convert_room_to_native(room, thisroom);
-    AGSString roomFileName = TextHelper::ConvertUTF8(room->FileName);
-    save_room_file(thisroom, roomFileName);
+    RoomStruct *roomptr = (RoomStruct*)(void*)room->_roomStructPtr;
+    convert_room_to_native(room, *roomptr);
+    save_room_file(*roomptr, TextHelper::ConvertUTF8(room->FileName));
 }
 
 void save_default_crm_file(Room ^room)
@@ -4412,7 +4412,7 @@ void save_room_file(RoomStruct &rs, const AGSString &path)
 
     rs.BackgroundBPP = rs.BgFrames[0].Graphic->GetBPP();
     for (int i = 0; i < 256; ++i)
-        thisroom.Palette[i] = thisroom.BgFrames[0].Palette[i];
+        rs.Palette[i] = rs.BgFrames[0].Palette[i];
 
     std::unique_ptr<Stream> out(AGSFile::CreateFile(path));
     if (out == NULL)
