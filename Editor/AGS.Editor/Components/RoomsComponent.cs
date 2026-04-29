@@ -603,12 +603,6 @@ namespace AGS.Editor.Components
         {
 			lock (_roomLoadingOrSavingLock)
 			{
-				if (room != _loadedRoom)
-				{
-					errors.Add(new CompileError("Attempted to save room " + room.Number + " which is not loaded"));
-					return;
-				}
-
 				PerformPreSaveChecks(room);
 
 				if (!_agsEditor.AttemptToGetWriteAccess(room.FileName))
