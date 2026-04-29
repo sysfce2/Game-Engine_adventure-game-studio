@@ -279,9 +279,6 @@
     <ClCompile Include="..\..\Engine\ac\global_palette.cpp">
       <Filter>Source Files\ac</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Engine\ac\global_parser.cpp">
-      <Filter>Source Files\ac</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Engine\ac\global_region.cpp">
       <Filter>Source Files\ac</Filter>
     </ClCompile>
@@ -942,9 +939,6 @@
       <Filter>Header Files\ac</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Engine\ac\global_palette.h">
-      <Filter>Header Files\ac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Engine\ac\global_parser.h">
       <Filter>Header Files\ac</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Engine\ac\global_region.h">

@@ -19,6 +19,7 @@
 #include "ac/gamesetupstruct.h"
 #include "ac/gamestate.h"
 #include "ac/global_game.h"
+#include "ac/parser.h"
 #include "ac/runtime_defines.h"
 #include "ac/translation.h"
 #include "ac/wordsdictionary.h"
@@ -76,8 +77,9 @@ void restore_game_fonts(const Translation &old_trans)
     }
 }
 
-void close_translation ()
+void close_translation()
 {
+    game.options[OPT_AUTOTRANSPARSERSAID] = 0;
     if (trans.FontOverrides.size() > 0)
     {
         restore_game_fonts(trans);
@@ -93,6 +95,7 @@ void close_translation ()
     else
         set_uformat(U_ASCII);
     play.SetGameTextLanguage(game.GameTextLanguage);
+    SetTranslationTextParser(CreateTextParser(game.dict.get(), get_uformat() == U_UTF8, play.GetTextLocaleName()));
 }
 
 bool init_translation(const String &lang, const String &fallback_lang)
@@ -152,6 +155,7 @@ bool init_translation(const String &lang, const String &fallback_lang)
         play.text_align = kHAlignRight;
         game.options[OPT_RIGHTLEFTWRITE] = 1;
     }
+    game.options[OPT_AUTOTRANSPARSERSAID] = (trans.OptFlags & kTraOpt_AutoTranslateSaid) != 0;
 
     // Font overrides
     if (trans.FontOverrides.size() > 0)
@@ -202,6 +206,18 @@ bool init_translation(const String &lang, const String &fallback_lang)
     }
 
     play.SetGameTextLanguage(language);
+    if (trans.ParserDict.GetWords().size() > 0)
+    {
+        // The parser dictionary must contain all expected word groups, so if any are not
+        // found in the translated dict, then add base ones directly there.
+        if (game.dict.get())
+            MergeParserDictionary(&trans.ParserDict, game.dict.get());
+        SetTranslationTextParser(CreateTextParser(&trans.ParserDict, get_uformat() == U_UTF8, play.GetTextLocaleName()));
+    }
+    else
+    {
+        SetTranslationTextParser(CreateTextParser(game.dict.get(), get_uformat() == U_UTF8, play.GetTextLocaleName()));
+    }
 
     Debug::Printf(kDbgMsg_Info, "Translation initialized: %s (format: %s)", trans_name.GetCStr(), encoding_msg.GetCStr());
     return true;

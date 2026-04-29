@@ -173,8 +173,6 @@ target_sources(engine
     ac/global_overlay.h
     ac/global_palette.cpp
     ac/global_palette.h
-    ac/global_parser.cpp
-    ac/global_parser.h
     ac/global_region.cpp
     ac/global_region.h
     ac/global_room.cpp

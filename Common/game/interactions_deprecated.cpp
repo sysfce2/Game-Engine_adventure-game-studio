@@ -11,16 +11,25 @@
 // https://opensource.org/license/artistic-2-0/
 //
 //=============================================================================
-#include <stdio.h> // snprintf
-#include "ac/global_parser.h"
-#include "ac/common.h"
-#include "ac/gamestate.h"
-#include "ac/string.h"
+//
+// Deprecated interactions stuff.
+// Perhaps move to some legacy knowledge base; or restore when it's possible to
+// support ancient games.
+//
+//=============================================================================
 
-int SaidUnknownWord (char*buffer) {
-    VALIDATE_STRING(buffer);
-    snprintf(buffer, MAX_MAXSTRLEN, "%s", play.bad_parsed_word.GetCStr());
-    if (play.bad_parsed_word.IsEmpty())
-        return 0;
-    return 1;
+#if defined (OBSOLETE)
+
+#include "game/interactions_deprecated.h"
+#include "util/stream.h"
+
+using namespace AGS::Common;
+
+void freadmissout(short *pptr, Stream *in)
+{
+    in->ReadArrayOfInt16(&pptr[0], 5);
+    in->ReadArrayOfInt16(&pptr[7], NUM_CONDIT - 7);
+    pptr[5] = pptr[6] = 0;
 }
+
+#endif // OBSOLETE

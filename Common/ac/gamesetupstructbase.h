@@ -63,7 +63,9 @@ struct GameSetupStructBase
     int               inv_hot_sprite = 0;
     int               reserved[NUM_INTS_RESERVED] = { 0 };
     Common::String    messages[MAXGLOBALMES] = {};
-    std::unique_ptr<WordsDictionary> dict;
+    // Base text parser dictionary, contains parser words in the original game language.
+    // This may be overridden by the parser dictionary read from translation, if one is applied.
+    std::unique_ptr<AGS::Common::WordsDictionary> dict;
     std::vector<CharacterInfo> chars;
     std::vector<CharacterInfo2> chars2; // extended character fields
 
@@ -211,10 +213,10 @@ struct GameSetupStructBase
     }
 
     // Returns a list of game options that must be preserved when restoring a save
-    inline static std::array<int, 1> GetPreservedOptions()
+    inline static std::array<int, 2> GetPreservedOptions()
     {
-        return std::array<int, 1> {{
-            OPT_SAVECOMPONENTSIGNORE
+        return std::array<int, 2> {{
+            OPT_SAVECOMPONENTSIGNORE, OPT_AUTOTRANSPARSERSAID
         }};
     }
 

@@ -1552,6 +1552,37 @@ namespace AGS.Editor
             writer.Write((int)0);
         }
 
+        public static void WriteTextParserDictionary(List<Tuple<string, ushort>> parserDict, BinaryWriter writer)
+        {
+            // Support multiple words written in the words entries, as a comma-separated list
+            List<Tuple<string, ushort>> finalWords = new List<Tuple<string, ushort>>();
+            foreach (var item in parserDict)
+            {
+                string line = item.Item1;
+                ushort wordID = item.Item2;
+                var words = line.Split(',');
+                foreach (var word in words)
+                {
+                    if (!string.IsNullOrWhiteSpace(word))
+                    {
+                        finalWords.Add(new Tuple<string, ushort>(word.Trim(), wordID));
+                    }
+                }
+            }
+
+            writer.Write(finalWords.Count);
+            foreach (var word in finalWords)
+            {
+                WriteStringEncrypted(writer, word.Item1);
+                writer.Write((ushort)word.Item2);
+            }
+        }
+
+        private static void WriteTextParserDictionary(TextParser parser, BinaryWriter writer)
+        {
+            WriteTextParserDictionary(parser.Words.Select(w => new Tuple<string, ushort>(w.Word, (ushort)w.WordGroup)).ToList(), writer);
+        }
+
         public static bool SaveThisGameToFile(string fileName, Game game, CompileMessages errors)
         {
             FileStream ostream = File.Create(fileName);
@@ -1641,12 +1672,8 @@ namespace AGS.Editor
             {
                 writer.Write((int)0);
             }
-            writer.Write(game.TextParser.Words.Count);
-            for (int i = 0; i < game.TextParser.Words.Count; ++i)
-            {
-                WriteStringEncrypted(writer, SafeTruncate(game.TextParser.Words[i].Word, NativeConstants.MAX_PARSER_WORD_LENGTH));
-                writer.Write((short)game.TextParser.Words[i].WordGroup);
-            }
+            WriteTextParserDictionary(game.TextParser, writer);
+
             if (!WriteCompiledScript(ostream, game.ScriptsToCompile.GetScriptByFilename(Script.GLOBAL_SCRIPT_FILE_NAME), errors) ||
                 !WriteCompiledScript(ostream, game.ScriptsToCompile.GetScriptByFilename(Script.DIALOG_SCRIPTS_FILE_NAME), errors))
             {
